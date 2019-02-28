@@ -1,1 +1,5 @@
 theme: jekyll-theme-midnight
+title: Payload
+author: Kromey
+show_downloads: false
+paginate: 5
