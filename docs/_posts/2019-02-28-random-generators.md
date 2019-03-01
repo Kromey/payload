@@ -30,7 +30,7 @@ As to the first question: I've grown a little cold on PCG32. For starters, while
 
 This feature just doesn't hold up as being truly beneficial.
 
-Another feature touted for PCG32 is its small state: Just a pair of 64-bit integers. Which is half what Xoshiro256\*\*, for example, uses. But: So what? Who out there is using a system where the difference of 128 bits actually matters? 4 Xoshiro256\*\* generators fit in a mere 1 KB of RAM; sure, you can put 8 PCG32s in that same space, but really this is seriously small potatoes we're talking about here! At this point the choice of which image compression algorithm you use for your assets is many orders of magnitude more important!
+Another feature touted for PCG32 is its small state: Just a pair of 64-bit integers. Which is half what Xoshiro256\*\*, for example, uses. But: So what? Who out there is using a system where the difference of 128 bits actually matters? 32 Xoshiro256\*\* generators fit in a mere 1 KB of RAM; sure, you can put 64 PCG32s in that same space, but really this is seriously small potatoes we're talking about here! At this point the choice of which image compression algorithm you use for your assets is many orders of magnitude more important!
 
 Secondly, there's some [serious questions about the quality of PCG32](http://pcg.di.unimi.it/pcg.php). I'm not saying I need a perfect PRNG (and what would a "perfect" one look like anyway?), but if Xoshiro256\*\* *is* in fact better at being "random", *and* is faster at the same time as its authors claim, then doesn't that make it the superior PRNG?
 
