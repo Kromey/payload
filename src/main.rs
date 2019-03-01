@@ -1,4 +1,4 @@
-use payload::rand;
+mod rand;
 
 fn main() {
     let seed = 1880u64;
