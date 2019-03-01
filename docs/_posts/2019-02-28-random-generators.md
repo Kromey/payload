@@ -38,3 +38,18 @@ So I'm leaning toward using Xoshiro256\*\*.
 
 Still, chiefly because it is so popular, I want to give PCG32 a fair shake. So I'm going to benchmark both of them, just as soon as I figure out how to run benchmarks in Rust. If PCG32 just blows Xoshiro256\*\* out of the water, then I'll use it. If it's only a little bit faster, and especially if it's slower, I'll let my qualms above rule it out.
 
+*Update 1 March 2019:*
+
+Turns out it's not hard to get Rust's Nightly installed and running, and from there only took a little trial and error to figure out the necessary pixie dust to get benchmarks running. Long story short, here's a representative result:
+
+```
+running 2 tests
+test rand::tests::bench_pcg     ... bench:      14,697 ns/iter (+/- 308)
+test rand::tests::bench_xoshiro ... bench:      11,696 ns/iter (+/- 652)
+```
+
+As you can probably guess, `bench_pcg` benchmarks my PCG32 generator, and `bench_xoshiro` does the same for Xoshiro256\*\*. Each one generates 10,000 random integers, summing them as it goes. Interestingly, the latter usually (but not always) has more variance (the "+/-" at the end of the line), and the two generators usually overlap if you consider the variance -- but importantly Xoshiro256\*\* is almost always the faster by a considerable margin.
+
+So the takeaways from this are:
+ 1. Whether or not PCG32 is flawed in the quality of its output, it's slower than Xoshiro256\*\*, which takes away the last possible benefit to using it.
+ 2. I eagerly await the day that I don't have to switch to Nightly Rust to run benchmarks!
