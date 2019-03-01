@@ -3,3 +3,12 @@ title: Payload
 author: Kromey
 show_downloads: false
 paginate: 5
+
+defaults:
+  -
+    scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: "post"
+      category: "Devlog"
