@@ -79,11 +79,6 @@ impl Rand {
 
     /// Roll `n` `sides`-sided dice, and return the sum of the results
     pub fn nroll(&mut self, dice: u32, sides: u32) -> u32 {
-        let mut sum = 0;
-        for _i in 0..dice {
-            sum += self.roll(sides);
-        }
-
-        sum
+        (0..dice).fold(0, |sum, _| sum + self.roll(sides))
     }
 }
