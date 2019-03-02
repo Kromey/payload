@@ -72,12 +72,12 @@ impl Rand {
 
     /// Roll a `sides`-sided dice and return the result
     ///
-    /// The result will always be an integer in the range [0, sides]
+    /// The result will always be an integer in the range [1, sides]
     pub fn roll(&mut self, sides: u32) -> u32 {
         self.rand_bound(sides) + 1
     }
 
-    /// Roll `n` `sides`-sided dice, and return the sum of the results
+    /// Roll `dice` `sides`-sided dice, and return the sum of the results
     pub fn nroll(&mut self, dice: u32, sides: u32) -> u32 {
         (0..dice).fold(0, |sum, _| sum + self.roll(sides))
     }
