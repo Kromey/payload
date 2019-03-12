@@ -24,13 +24,13 @@ impl Rand {
     }
 
     /// Generate a random 64-bit integer
-    pub fn rand(&mut self) -> u64 {
+    pub fn rand_u64(&mut self) -> u64 {
         self.rng.next()
     }
 
     /// Generate a random 32-bit integer
-    pub fn rand32(&mut self) -> u32 {
-        self.rand() as u32
+    pub fn rand_u32(&mut self) -> u32 {
+        self.rand_u64() as u32
     }
 
     /// Generate a random 32-bit integer that's in the range (min, max]
@@ -61,7 +61,7 @@ impl Rand {
         // first iteration.
         let mut n: u32;
         loop {
-            n = self.rand32();
+            n = self.rand_u32();
             if n > threshold {
                 break;
             }
@@ -73,12 +73,12 @@ impl Rand {
     /// Roll a `sides`-sided dice and return the result
     ///
     /// The result will always be an integer in the range [1, sides]
-    pub fn roll(&mut self, sides: u32) -> u32 {
+    pub fn roll_dx(&mut self, sides: u32) -> u32 {
         self.rand_bound(sides) + 1
     }
 
     /// Roll `dice` `sides`-sided dice, and return the sum of the results
-    pub fn nroll(&mut self, dice: u32, sides: u32) -> u32 {
-        (0..dice).fold(0, |sum, _| sum + self.roll(sides))
+    pub fn roll_ndx(&mut self, dice: u32, sides: u32) -> u32 {
+        (0..dice).fold(0, |sum, _| sum + self.roll_dx(sides))
     }
 }
