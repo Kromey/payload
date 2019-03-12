@@ -7,13 +7,10 @@ pub struct Rand {
 
 impl Rand {
     /// Create a new PRNG generator.
-    ///
-    /// # TODO
-    ///
-    /// Currently this method uses a static, hard-coded seed. This should be
-    /// changed to instead use a new, arbitrary seed on each run.
     pub fn new() -> Rand {
-        Rand::from_seed(0xCAFEBABE)
+        Rand {
+            rng: xoshiro::Xoshiro256::new(),
+        }
     }
 
     /// Create a new PRNG generator from a seed

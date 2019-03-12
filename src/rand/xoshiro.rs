@@ -1,9 +1,18 @@
+use std::time::SystemTime;
+
 /// Implementation of xoshiro256**, ported into Rust from the C implementation
 /// available at http://xoshiro.di.unimi.it
 #[derive(Debug)]
 pub struct Xoshiro256 ( u64, u64, u64, u64 );
 
 impl Xoshiro256 {
+    pub fn new() -> Xoshiro256 {
+        match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
+            Ok(n) => Xoshiro256::from_seed(n.as_secs()),
+            Err(_) => panic!("SystemTime failed to give us a time!"),
+        }
+    }
+
     /// Create a new PRNG generator from a seed
     ///
     /// Uses SplitMix64 to turn the 64-bit seed into 256 bits of state.
