@@ -9,7 +9,7 @@ impl Xoshiro256 {
     pub fn new() -> Xoshiro256 {
         match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
             Ok(n) => Xoshiro256::from_seed(n.as_secs()),
-            Err(_) => panic!("SystemTime failed to give us a time!"),
+            Err(_) => Xoshiro256::from_seed(0xCAFEBABE),
         }
     }
 
