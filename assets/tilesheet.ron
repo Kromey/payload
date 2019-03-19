@@ -1,0 +1,69 @@
+(
+    spritesheet_width: 448,
+    spritesheet_height: 192,
+    sprites: [
+        (
+            // Floor
+            x: 192,
+            y: 32,
+            width: 32,
+            height: 32,
+        ),
+        (
+            // Wall North
+            x: 192,
+            y: 0,
+            width: 32,
+            height: 32,
+        ),
+        (
+            // Wall Northeast
+            x: 224,
+            y: 0,
+            width: 32,
+            height: 32,
+        ),
+        (
+            // Wall East
+            x: 224,
+            y: 32,
+            width: 32,
+            height: 32,
+        ),
+        (
+            // Wall Southeast
+            x: 224,
+            y: 64,
+            width: 32,
+            height: 32,
+        ),
+        (
+            // Wall South
+            x: 192,
+            y: 64,
+            width: 32,
+            height: 32,
+        ),
+        (
+            // Wall Southwest
+            x: 160,
+            y: 64,
+            width: 32,
+            height: 32,
+        ),
+        (
+            // Wall West
+            x: 160,
+            y: 32,
+            width: 32,
+            height: 32,
+        ),
+        (
+            // Wall Northwest
+            x: 160,
+            y: 0,
+            width: 32,
+            height: 32,
+        ),
+    ],
+)
