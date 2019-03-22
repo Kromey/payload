@@ -28,4 +28,4 @@ In fact, you really *never* need to do that square root operation, unless you're
 
 BONUS: There's a popular myth among programmers that, while square root is painfully slow, raising a number to the ½ power is considerably faster. I benchmarked that, too, in Rust: 10,000 such calculations took 47µs, so it was actually about 15% *slower*! I've seen similar comparisons for e.g. C# that show the two to be equivalent.
 
-It's always possible that your language has somehow optimized raising to the ½ power but ignored the same optimization to square root, so try it yourself.
+It's always possible that your language has somehow optimized raising to the ½ power but ignored the same optimization to square root, so try it yourself. Either way, though, you're going to be better off without either.
