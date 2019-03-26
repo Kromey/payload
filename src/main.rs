@@ -1,5 +1,3 @@
-extern crate amethyst;
-
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::nalgebra::Orthographic3;
 use amethyst::core::Transform;
