@@ -126,7 +126,10 @@ impl ExampleState {
 }
 
 fn main() -> amethyst::Result<()> {
-    amethyst::start_logger(Default::default());
+    amethyst::Logger::from_config(Default::default())
+        .level_for("gfx_device_gl", amethyst::LogLevelFilter::Warn)
+        .level_for("gfx_glyph", amethyst::LogLevelFilter::Error)
+        .start();
     let app_root = application_root_dir();
     let display_config = DisplayConfig::load(format!(
         "{}/resources/display_config.ron",
