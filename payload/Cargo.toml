@@ -1,0 +1,8 @@
+[package]
+name = "payload"
+version = "0.1.0"
+authors = ["Travis Veazey <travisvz@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+amethyst = "0.10.0"
