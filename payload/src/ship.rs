@@ -1,5 +1,6 @@
 use std::io;
 use std::io::prelude::*;
+use map::TileMap;
 
 #[derive(Debug)]
 enum SectorShape {
@@ -20,19 +21,19 @@ impl Sector {
     }
 
     pub fn print(&self) {
-        let mut max_x = 0;
-        let mut max_y = 0;
+        let mut width = 0;
+        let mut height = 0;
 
         match self.shape {
             SectorShape::Sphere{r} => {
-                max_x = r * 2;
-                max_y = r * 2;
+                width = r * 2;
+                height = r * 2;
             },
             _ => {
                 unimplemented!();
             },
         }
 
-        println!("{} {}", max_x, max_y);
+        println!("{} {}", width, height);
     }
 }
