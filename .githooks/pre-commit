@@ -1,0 +1,31 @@
+#!/bin/bash
+# Pre-commit hook to enforce proper formatting in Rust files.
+# Much thanks to:
+#  https://eugene-babichenko.github.io/blog/2018/11/08/rustfmt-git-hook/
+#  https://gist.github.com/hryniuk/e3f4ae34e37947d0ff55a3f63add90f8
+#
+# To install this hook, run `git config core.hooksPath .githooks` in this repo.
+
+NEEDS_FMT=0
+
+for file in $(git diff --name-only --staged)
+do
+	if [[ -e $file && $file == *.rs ]]
+	then
+		rustfmt --check $file > /dev/null 2>&1
+		RESULT=$?
+		if [ $RESULT -ne 0 ]
+		then
+			echo $file
+			NEEDS_FMT=1
+		fi
+	fi
+done
+
+if [ $NEEDS_FMT -eq 1 ]
+then
+	echo "	Your code has formatting issues in files listed above. Format your code with \`cargo fmt\` or call rustfmt manually."
+fi
+
+exit $NEEDS_FMT
+

@@ -1,0 +1,49 @@
+[package]
+name = "payload"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+[dependencies.bevy]
+version = "0.11"
+# Disable the default features if there are any that you do not want
+default-features = false
+features = [ 
+  # Bevy functionality:
+  "bevy_asset",         # Assets management
+  "bevy_winit",         # Window management
+  "x11",                # Linux: Support X11 windowing system
+  "wayland",            # Linux: Support Wayland windowing system
+  "bevy_gizmos",        # Immediate-mode drawing
+  "bevy_ui",            # User interface
+
+  # Rendering
+  "bevy_render",        # Rendering framework core
+  "bevy_core_pipeline", # Common rendering abstractions
+  "bevy_sprite",        # 2D (sprites) rendering
+
+  # File formats:
+  "png",
+
+  # serde
+  "serialize",
+]
+
+[profile.dev]
+incremental = true
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+# Incorporating options from https://github.com/johnthagen/min-sized-rust
+# At the time of writing, this reduces the release build to ~39% the size
+strip = true
+lto = true
+opt-level = "z"
+codegen-units = 1
+panic = "abort"
