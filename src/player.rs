@@ -25,17 +25,17 @@ pub fn player_debug(player_qry: Query<&GlobalTransform, With<Player>>, mut gizmo
         let position = player_transform.translation().truncate();
         let looking = player_transform.right().truncate();
 
-        gizmos.circle_2d(position, 25.0, Color::BLUE.with_a(0.5));
+        gizmos.circle_2d(position, 16.0, Color::BLUE.with_a(0.5));
         gizmos.arc_2d(
             position,
             looking.angle_between(Vec2::Y),
             TAU / 3.0,
-            25.0,
+            16.0,
             Color::GREEN.with_a(0.5),
         );
         gizmos.ray_2d(
-            position + looking * 20.0,
-            looking * 20.0,
+            position + looking * 14.0,
+            looking * 10.0,
             Color::GREEN.with_a(0.5),
         );
     }
