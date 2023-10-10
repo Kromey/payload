@@ -87,6 +87,10 @@ pub fn player_walk(
         }
 
         velocity = velocity.normalize_or_zero() * PLAYER_MOVE_SPEED * time.delta_seconds();
+        if keys.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight]) {
+            velocity *= 0.2;
+        }
+
         if velocity.length_squared() > 0.0 {
             player_velocity.translation = Some(velocity);
         }
