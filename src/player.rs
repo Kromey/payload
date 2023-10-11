@@ -92,7 +92,9 @@ pub fn player_walk(
         }
 
         if velocity.length_squared() > 0.0 {
-            player_velocity.translation = Some(velocity);
+            // Use get_or_insert and then add our velocity
+            // This preserves any forces acting on the player added by other systems
+            *player_velocity.translation.get_or_insert(Vec2::ZERO) += velocity;
         }
     }
 }
