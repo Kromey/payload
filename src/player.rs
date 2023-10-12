@@ -28,20 +28,36 @@ pub fn spawn_player(mut commands: Commands, sprites: Res<Sprites>) {
 
     // Spawn a collider so we can see how/if physics works
     commands.spawn((
-        SpatialBundle::from_transform(Transform::from_translation(Vec3::Y * 128.0)),
+        SpriteBundle {
+            transform: Transform::from_translation(Vec3::Y * 128.0),
+            sprite: Sprite {
+                color: Color::BLUE,
+                custom_size: Some(Vec2::new(64.0, 4.0)),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
         Collider::cuboid(32.0, 2.0),
     ));
 
     // Spawn a loose item we can bump into
     commands.spawn((
-        SpatialBundle::from_transform(Transform::from_translation(Vec3::X * 128.0)),
+        SpriteBundle {
+            transform: Transform::from_translation(Vec3::X * 128.0),
+            sprite: Sprite {
+                color: Color::BLACK,
+                custom_size: Some(Vec2::splat(16.0)),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
         RigidBody::Dynamic,
         // AdditionalMassProperties::Mass(1.0),
         Damping {
             linear_damping: 1.0,
             angular_damping: 2.0,
         },
-        Collider::ball(8.0),
+        Collider::cuboid(8.0, 8.0),
     ));
 }
 
