@@ -23,6 +23,9 @@ pub fn calculate_fov(
         Vec2::new(x2, y2),
     ];
 
+    let maximal_color = Color::GRAY;
+    let viewable_color = Color::NAVY;
+
     let max_toi = 256.0;
     let solid = true;
     let filter = QueryFilter::new().groups(CollisionGroups::new(Group::all(), OPAQUE_GROUP));
@@ -33,30 +36,35 @@ pub fn calculate_fov(
         let player_pos = player_transform.translation().truncate();
         let filter = filter.exclude_collider(player);
 
+        gizmos.arc_2d(
+            player_pos,
+            player_facing.angle_between(Vec2::Y),
+            view_cone * 2.0,
+            max_toi,
+            maximal_color,
+        );
+
         for &corner in points.iter() {
             let ray_dir = (corner - player_pos).normalize();
             if player_facing.angle_between(ray_dir).abs() <= view_cone {
-                gizmos.ray_2d(
-                    player_pos,
-                    (corner - player_pos).clamp_length_max(max_toi),
-                    Color::WHITE,
-                );
-                let toi = rapier_context
-                    .cast_ray(player_pos, ray_dir, max_toi, solid, filter)
-                    .map(|(_, toi)| toi)
-                    .unwrap_or(max_toi);
-                gizmos.ray_gradient_2d(player_pos, ray_dir * toi, Color::GREEN, Color::RED);
+                gizmos.line_2d(player_pos, corner, maximal_color);
+                if let Some((_, toi)) =
+                    rapier_context.cast_ray(player_pos, ray_dir, max_toi, solid, filter)
+                {
+                    gizmos.ray_2d(player_pos, ray_dir * toi, viewable_color);
+                }
             }
         }
 
         for angle in [Vec2::from_angle(view_cone), Vec2::from_angle(-view_cone)] {
             let ray_dir = player_facing.rotate(angle);
-            gizmos.ray_2d(player_pos, ray_dir * max_toi, Color::WHITE);
+            gizmos.ray_2d(player_pos, ray_dir * max_toi, maximal_color);
+            // This is the edge of the view cone, always draw this ray even if it doesn't collide with anything
             let toi = rapier_context
                 .cast_ray(player_pos, ray_dir, max_toi, solid, filter)
                 .map(|(_, toi)| toi)
                 .unwrap_or(max_toi);
-            gizmos.ray_gradient_2d(player_pos, ray_dir * toi, Color::GREEN, Color::RED);
+            gizmos.ray_2d(player_pos, ray_dir * toi, viewable_color);
         }
     }
 }
