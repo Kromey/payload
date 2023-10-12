@@ -1,5 +1,8 @@
 use bevy::prelude::*;
 
+mod physics_groups;
+pub use physics_groups::*;
+
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, States)]
 pub enum GameState {
     #[default]

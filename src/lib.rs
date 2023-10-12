@@ -5,6 +5,7 @@ use bevy_rapier2d::prelude::*;
 
 mod camera;
 mod core;
+mod fov;
 mod player;
 mod sprites;
 
@@ -29,6 +30,7 @@ pub fn run_game() {
             (
                 core::advance_game_state,
                 player::player_debug,
+                fov::calculate_fov,
                 (player::player_walk, player::player_face).run_if(in_state(GameState::InGame)),
             ),
         )

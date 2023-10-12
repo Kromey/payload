@@ -3,7 +3,11 @@ use std::f32::consts::TAU;
 use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_rapier2d::prelude::*;
 
-use crate::{camera::MainCamera, sprites::Sprites};
+use crate::{
+    camera::MainCamera,
+    core::{OPAQUE_GROUP, PLAYER_GROUP},
+    sprites::Sprites,
+};
 
 //FIXME: This should be a component on the player
 const PLAYER_MOVE_SPEED: f32 = 150.0;
@@ -24,6 +28,7 @@ pub fn spawn_player(mut commands: Commands, sprites: Res<Sprites>) {
         },
         Velocity::default(),
         Player,
+        CollisionGroups::new(PLAYER_GROUP, Group::all()),
     ));
 
     // Spawn a collider so we can see how/if physics works
@@ -32,12 +37,13 @@ pub fn spawn_player(mut commands: Commands, sprites: Res<Sprites>) {
             transform: Transform::from_translation(Vec3::Y * 128.0),
             sprite: Sprite {
                 color: Color::BLUE,
-                custom_size: Some(Vec2::new(64.0, 4.0)),
+                custom_size: Some(Vec2::new(64.0, 32.0)),
                 ..Default::default()
             },
             ..Default::default()
         },
-        Collider::cuboid(32.0, 2.0),
+        Collider::cuboid(32.0, 16.0),
+        CollisionGroups::new(OPAQUE_GROUP, Group::all()),
     ));
 
     // Spawn a loose item we can bump into
@@ -58,6 +64,7 @@ pub fn spawn_player(mut commands: Commands, sprites: Res<Sprites>) {
             angular_damping: 2.0,
         },
         Collider::cuboid(8.0, 8.0),
+        CollisionGroups::new(!OPAQUE_GROUP, Group::all()),
     ));
 }
 
