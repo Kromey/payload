@@ -30,6 +30,7 @@ pub fn calculate_fov(
     let solid = true;
     let filter = QueryFilter::new().groups(CollisionGroups::new(Group::all(), OPAQUE_GROUP));
     let view_cone = TAU / 12.0; // Vision only extends ±this angle
+    let auxiliary_ray_angle = 0.001; // How wide to cast auxiliary rays when testing view past a corner
 
     for (player, player_transform) in player_qry.iter() {
         let player_facing = player_transform.right().truncate();
@@ -53,12 +54,30 @@ pub fn calculate_fov(
                 {
                     let contact = player_pos + ray_dir * toi;
                     gizmos.line_2d(player_pos, contact, viewable_color);
-                    let contact_color = if contact.distance_squared(corner) < 1.0 {
-                        Color::RED
-                    } else {
-                        Color::BLUE
-                    };
-                    gizmos.circle_2d(contact, 1.0, contact_color);
+
+                    // If we reached the corner, cast auxiliary rays
+                    // See Section 2.2 here https://legends2k.github.io/2d-fov/design.html for an optimization,
+                    // but it requires knowing the line segments, not just the list of corners
+                    if contact.distance_squared(corner) < 1.0 {
+                        gizmos.circle_2d(contact, 1.0, Color::RED);
+
+                        for angle in [
+                            Vec2::from_angle(auxiliary_ray_angle),
+                            Vec2::from_angle(-auxiliary_ray_angle),
+                        ] {
+                            let ray_dir = ray_dir.rotate(angle);
+                            if rapier_context
+                                .cast_ray(player_pos, ray_dir, max_toi, solid, filter)
+                                .is_none()
+                            {
+                                let contact = player_pos + ray_dir * max_toi;
+                                gizmos.line_2d(player_pos, contact, viewable_color);
+
+                                // We've seen past this corner already, no reason to try the other side
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
