@@ -30,7 +30,7 @@ pub fn calculate_fov(
     let solid = true;
     let filter = QueryFilter::new().groups(CollisionGroups::new(Group::all(), OPAQUE_GROUP));
     let view_cone = TAU / 12.0; // Vision only extends ±this angle
-    let auxiliary_ray_angle = 0.001; // How wide to cast auxiliary rays when testing view past a corner
+    let auxiliary_ray_angle = 0.005; // How wide to cast auxiliary rays when testing view past a corner
 
     for (player, player_transform) in player_qry.iter() {
         let player_facing = player_transform.right().truncate();
