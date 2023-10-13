@@ -51,7 +51,14 @@ pub fn calculate_fov(
                 if let Some((_, toi)) =
                     rapier_context.cast_ray(player_pos, ray_dir, max_toi, solid, filter)
                 {
-                    gizmos.ray_2d(player_pos, ray_dir * toi, viewable_color);
+                    let contact = player_pos + ray_dir * toi;
+                    gizmos.line_2d(player_pos, contact, viewable_color);
+                    let contact_color = if contact.distance_squared(corner) < 1.0 {
+                        Color::RED
+                    } else {
+                        Color::BLUE
+                    };
+                    gizmos.circle_2d(contact, 1.0, contact_color);
                 }
             }
         }
