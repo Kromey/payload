@@ -1,6 +1,6 @@
 use core::GameState;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, transform::TransformSystem};
 use bevy_rapier2d::prelude::*;
 
 mod camera;
@@ -33,6 +33,11 @@ pub fn run_game() {
                 fov::calculate_fov,
                 (player::player_walk, player::player_face).run_if(in_state(GameState::InGame)),
             ),
+        )
+        // Update camera position in PostUpdate, but before Bevy propagates Transform to GlobalTransform
+        .add_systems(
+            PostUpdate,
+            camera::follow_player.after(TransformSystem::TransformPropagate),
         )
         .add_systems(OnEnter(GameState::InGame), player::spawn_player)
         .run();
