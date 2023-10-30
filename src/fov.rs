@@ -5,6 +5,13 @@ use bevy_rapier2d::prelude::*;
 
 use crate::{core::OPAQUE_GROUP, player::Player};
 
+/// How wide to cast auxiliary rays when checking for vision past a corner
+///
+/// When a corner is seen within a view cone, move ±this distance from the
+/// corner, perpendicular to the ray, and cast new rays to determine viewable
+/// distance past the corner.
+const AUXILIARY_RAY_DISTANCE: f32 = 2.0;
+
 pub fn calculate_fov(
     rapier_context: Res<RapierContext>,
     player_qry: Query<(Entity, &GlobalTransform), With<Player>>,
@@ -25,12 +32,12 @@ pub fn calculate_fov(
 
     let maximal_color = Color::GRAY;
     let viewable_color = Color::NAVY;
+    let visible_corner_color = Color::RED;
 
     let max_toi = 256.0;
     let solid = true;
     let filter = QueryFilter::new().groups(CollisionGroups::new(Group::all(), OPAQUE_GROUP));
     let view_cone = TAU / 12.0; // Vision only extends ±this angle
-    let auxiliary_ray_angle = 0.005; // How wide to cast auxiliary rays when testing view past a corner
 
     for (player, player_transform) in player_qry.iter() {
         let player_facing = player_transform.right().truncate();
@@ -59,19 +66,22 @@ pub fn calculate_fov(
                     // See Section 2.2 here https://legends2k.github.io/2d-fov/design.html for an optimization,
                     // but it requires knowing the line segments, not just the list of corners
                     if contact.distance_squared(corner) < 1.0 {
-                        gizmos.circle_2d(contact, 1.0, Color::RED);
+                        gizmos.circle_2d(contact, 1.0, visible_corner_color);
 
-                        for angle in [
-                            Vec2::from_angle(auxiliary_ray_angle),
-                            Vec2::from_angle(-auxiliary_ray_angle),
+                        // Since `ray_dir` is already normalized, the perpendicular vec is also normalized
+                        let perpendicular_step = ray_dir.perp() * AUXILIARY_RAY_DISTANCE;
+
+                        for aux_ray_dir in [
+                            (corner - perpendicular_step - player_pos).normalize(),
+                            (corner + perpendicular_step - player_pos).normalize(),
                         ] {
-                            let ray_dir = ray_dir.rotate(angle);
                             if rapier_context
-                                .cast_ray(player_pos, ray_dir, max_toi, solid, filter)
+                                .cast_ray(player_pos, aux_ray_dir, max_toi, solid, filter)
+                                // TODO: With additional objects, we may see past to them - not just to end of the cone
                                 .is_none()
                             {
-                                let contact = player_pos + ray_dir * max_toi;
-                                gizmos.line_2d(player_pos, contact, viewable_color);
+                                let contact = player_pos + aux_ray_dir * max_toi;
+                                gizmos.line_2d(player_pos, contact, Color::PURPLE);
 
                                 // We've seen past this corner already, no reason to try the other side
                                 break;
