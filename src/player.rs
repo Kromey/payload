@@ -1,6 +1,9 @@
 use std::f32::consts::TAU;
 
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::{
+    prelude::*, render::render_resource::PrimitiveTopology, sprite::MaterialMesh2dBundle,
+    window::PrimaryWindow,
+};
 use bevy_rapier2d::prelude::*;
 
 use crate::{
@@ -15,7 +18,19 @@ const PLAYER_MOVE_SPEED: f32 = 150.0;
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Component)]
 pub struct Player;
 
-pub fn spawn_player(mut commands: Commands, sprites: Res<Sprites>) {
+pub fn spawn_player(
+    mut commands: Commands,
+    sprites: Res<Sprites>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    asset_server: Res<AssetServer>,
+) {
+    let mesh_handle = meshes.add(Mesh::new(PrimitiveTopology::TriangleList));
+    commands.spawn(MaterialMesh2dBundle {
+        mesh: mesh_handle.clone().into(),
+        material: materials.add(ColorMaterial::from(asset_server.load("bevy_icon.png"))),
+        ..Default::default()
+    });
     commands.spawn((
         SpriteBundle {
             texture: sprites.player.clone(),
@@ -29,6 +44,7 @@ pub fn spawn_player(mut commands: Commands, sprites: Res<Sprites>) {
         Velocity::default(),
         Player,
         CollisionGroups::new(PLAYER_GROUP, Group::all()),
+        mesh_handle,
     ));
 
     // Spawn a collider so we can see how/if physics works

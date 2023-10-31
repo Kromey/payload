@@ -1,7 +1,7 @@
-use std::f32::consts::TAU;
-
-use bevy::prelude::*;
+use bevy::{prelude::*, render::mesh::Indices};
 use bevy_rapier2d::prelude::*;
+use itertools::Itertools;
+use std::f32::consts::TAU;
 
 use crate::{core::OPAQUE_GROUP, player::Player};
 
@@ -15,7 +15,8 @@ const DRAW_MAXIMAL_VIEW_CONE: bool = true;
 
 pub fn calculate_fov(
     rapier_context: Res<RapierContext>,
-    player_qry: Query<(Entity, &GlobalTransform), With<Player>>,
+    player_qry: Query<(Entity, &GlobalTransform, &Handle<Mesh>), With<Player>>,
+    mut meshes: ResMut<Assets<Mesh>>,
     mut gizmos: Gizmos,
 ) {
     let maximal_color = Color::GRAY;
@@ -28,7 +29,7 @@ pub fn calculate_fov(
     let view_cone = TAU / 12.0; // Vision only extends ±this angle
     let num_rays = (view_cone * 2.0 / RAY_ROTATION_ANGLE).floor() as usize;
 
-    for (player, player_transform) in player_qry.iter() {
+    for (player, player_transform, view_mesh) in player_qry.iter() {
         let player_facing = player_transform.right().truncate();
         let player_pos = player_transform.translation().truncate();
         let filter = filter.exclude_collider(player);
@@ -73,9 +74,45 @@ pub fn calculate_fov(
 
             end
         }));
-        points.push(player_pos);
         if DEBUG_VIEW_CONE {
-            gizmos.linestrip_2d(points, viewable_color);
+            // We need to add an additional origin point to the end to close the cone
+            let mut positions = points.clone();
+            positions.push(player_pos);
+            gizmos.linestrip_2d(positions, viewable_color);
         }
+
+        // Update our mesh
+        let mesh = meshes.get_mut(view_mesh).unwrap();
+        // Convert our Vec2 points into [f32; 3] arrays
+        let mesh_points = points
+            .iter()
+            .map(|point| [point.x, point.y, 0.0])
+            .collect_vec();
+        // Calculate UV map where [0,0] is top left and [1,1] is bottom right
+        // Note that UV coordinates are for the entire square that our view disc is inscribed within, not just the cone itself!
+        let uv_origin = Vec2::new(player_pos.x - max_toi, player_pos.y - max_toi);
+        let uv_points = points
+            .iter()
+            .map(|&point| {
+                let uv = (point - uv_origin) / max_toi / 2.0;
+                // Flip y: In Bevy space, y points up; in UV space, y points down!
+                [uv.x, 1.0 - uv.y]
+            })
+            .collect_vec();
+        // We need a list of triangles in order to generate our mesh
+        // Skip 0 initially as we'll insert it for each triangle
+        let indices = (1..mesh_points.len()).collect_vec();
+        let triangles = indices
+            // Use windows to get every (overlapping) pair of adjacent indices
+            .windows(2)
+            // Stick 0 in front of the pair, then flatten the whole thing
+            .flat_map(|pair| [0, pair[0] as u32, pair[1] as u32])
+            .collect_vec();
+
+        // Now update our mesh with all this stuff!
+        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, mesh_points);
+        mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uv_points);
+        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0.0, 0.0, 1.0]; points.len()]);
+        mesh.set_indices(Some(Indices::U32(triangles)));
     }
 }
