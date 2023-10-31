@@ -10,7 +10,7 @@ use crate::{core::OPAQUE_GROUP, player::Player};
 /// When a corner is seen within a view cone, move ±this distance from the
 /// corner, perpendicular to the ray, and cast new rays to determine viewable
 /// distance past the corner.
-const AUXILIARY_RAY_DISTANCE: f32 = 2.0;
+const AUXILIARY_RAY_DISTANCE: f32 = 1.75;
 
 pub fn calculate_fov(
     rapier_context: Res<RapierContext>,
