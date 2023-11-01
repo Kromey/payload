@@ -66,11 +66,13 @@ pub fn spawn_player(
     commands.spawn(MaterialMesh2dBundle {
         mesh: mesh_handle.clone().into(),
         material: materials.add(ColorMaterial::from(render_target.clone())),
+        transform: Transform::from_xyz(0.0, 0.0, 200.0),
         ..Default::default()
     });
     commands.spawn((
         SpriteBundle {
             texture: sprites.player.clone(),
+            transform: Transform::from_xyz(0.0, 0.0, 5.0),
             ..Default::default()
         },
         Collider::capsule(Vec2::new(0.0, -5.0), Vec2::new(0.0, 5.0), 12.0),
@@ -107,7 +109,7 @@ pub fn spawn_player(
     // Spawn a collider so we can see how/if physics works
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_translation(Vec3::Y * 128.0),
+            transform: Transform::from_xyz(0.0, 128.0, 1.0),
             sprite: Sprite {
                 color: Color::BLUE,
                 custom_size: Some(Vec2::new(64.0, 32.0)),
@@ -122,7 +124,7 @@ pub fn spawn_player(
     // Spawn a loose item we can bump into
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_translation(Vec3::X * 128.0),
+            transform: Transform::from_xyz(128.0, 0.0, 1.0),
             sprite: Sprite {
                 color: Color::BLACK,
                 custom_size: Some(Vec2::splat(16.0)),
@@ -167,6 +169,34 @@ pub fn spawn_player(
             ..Default::default()
         },));
     }
+
+    // Spawn a background image
+    commands.spawn(SpriteBundle {
+        texture: asset_server.load("nebula.png"),
+        sprite: Sprite {
+            color: Color::rgb(0.2, 0.2, 0.2),
+            ..Default::default()
+        },
+        ..Default::default()
+    });
+    // Spawn a second with our view camera's RenderLayer
+    commands.spawn((
+        SpriteBundle {
+            texture: asset_server.load("nebula.png"),
+            ..Default::default()
+        },
+        RenderLayers::layer(1),
+    ));
+    // Overlay a "fog of war"
+    // commands.spawn(SpriteBundle {
+    //     sprite: Sprite {
+    //         color: Color::BLACK.with_a(0.95),
+    //         custom_size: Some(Vec2::splat(2048.0)),
+    //         ..Default::default()
+    //     },
+    //     transform: Transform::from_xyz(0.0, 0.0, 0.1),
+    //     ..Default::default()
+    // });
 }
 
 pub fn player_debug(player_qry: Query<&GlobalTransform, With<Player>>, mut gizmos: Gizmos) {

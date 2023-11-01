@@ -10,8 +10,8 @@ const RAY_ROTATION_ANGLE: f32 = TAU / 360.0;
 
 /// FIXME: These should be debug options that can be switched on/off at runtime
 const DEBUG_RAYS: bool = false;
-const DEBUG_VIEW_CONE: bool = true;
-const DRAW_MAXIMAL_VIEW_CONE: bool = true;
+const DEBUG_VIEW_CONE: bool = false;
+const DRAW_MAXIMAL_VIEW_CONE: bool = false;
 
 #[derive(Debug, Clone, Component)]
 pub struct FieldOfView {
