@@ -151,18 +151,21 @@ pub fn spawn_player(
             },
             RenderLayers::layer(1),
         ));
-        // let transform = Transform::from_xyz(x, y, 99.0);
-        // commands.spawn((
-        //     SpriteBundle {
-        //         transform,
-        //         texture: asset_server.load("bevy_icon_32.png"),
-        //         sprite: Sprite {
-        //             color: Color::Rgba { red: 0.5, green: 1.0, blue: 0.5, alpha: 0.2 },
-        //             ..Default::default()
-        //         },
-        //         ..Default::default()
-        //     },
-        // ));
+        let transform = Transform::from_xyz(x, y, 99.0);
+        commands.spawn((SpriteBundle {
+            transform,
+            texture: asset_server.load("bevy_icon_32.png"),
+            sprite: Sprite {
+                color: Color::Rgba {
+                    red: 0.5,
+                    green: 1.0,
+                    blue: 0.5,
+                    alpha: 0.2,
+                },
+                ..Default::default()
+            },
+            ..Default::default()
+        },));
     }
 }
 
