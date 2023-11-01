@@ -13,9 +13,16 @@ const DEBUG_RAYS: bool = false;
 const DEBUG_VIEW_CONE: bool = true;
 const DRAW_MAXIMAL_VIEW_CONE: bool = true;
 
-pub fn calculate_fov(
+#[derive(Debug, Clone, Component)]
+pub struct FieldOfView {
+    pub view_distance: u32,
+    pub mesh: Handle<Mesh>,
+    pub texture: Handle<Image>,
+}
+
+pub fn update_fov(
     rapier_context: Res<RapierContext>,
-    player_qry: Query<(Entity, &GlobalTransform, &Handle<Mesh>), With<Player>>,
+    player_qry: Query<(Entity, &GlobalTransform, &FieldOfView), With<Player>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut gizmos: Gizmos,
 ) {
@@ -23,13 +30,13 @@ pub fn calculate_fov(
     let ray_color = Color::NAVY;
     let viewable_color = Color::PURPLE;
 
-    let max_toi = 256.0;
     let solid = true;
     let filter = QueryFilter::new().groups(CollisionGroups::new(Group::all(), OPAQUE_GROUP));
     let view_cone = TAU / 12.0; // Vision only extends ±this angle
     let num_rays = (view_cone * 2.0 / RAY_ROTATION_ANGLE).floor() as usize;
 
-    for (player, player_transform, view_mesh) in player_qry.iter() {
+    for (player, player_transform, player_fov) in player_qry.iter() {
+        let max_toi = player_fov.view_distance as f32;
         let player_facing = player_transform.right().truncate();
         let player_pos = player_transform.translation().truncate();
         let filter = filter.exclude_collider(player);
@@ -82,7 +89,7 @@ pub fn calculate_fov(
         }
 
         // Update our mesh
-        let mesh = meshes.get_mut(view_mesh).unwrap();
+        let mesh = meshes.get_mut(&player_fov.mesh).unwrap();
         // Convert our Vec2 points into [f32; 3] arrays
         let mesh_points = points
             .iter()

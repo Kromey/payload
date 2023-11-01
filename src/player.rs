@@ -1,14 +1,25 @@
 use std::f32::consts::TAU;
 
 use bevy::{
-    prelude::*, render::render_resource::PrimitiveTopology, sprite::MaterialMesh2dBundle,
+    core_pipeline::clear_color::ClearColorConfig,
+    prelude::*,
+    render::{
+        camera::RenderTarget,
+        render_resource::{
+            Extent3d, PrimitiveTopology, TextureDescriptor, TextureDimension, TextureFormat,
+            TextureUsages,
+        },
+        view::RenderLayers,
+    },
+    sprite::MaterialMesh2dBundle,
     window::PrimaryWindow,
 };
 use bevy_rapier2d::prelude::*;
 
 use crate::{
-    camera::MainCamera,
+    camera::{FollowPlayer, MainCamera},
     core::{OPAQUE_GROUP, PLAYER_GROUP},
+    fov::FieldOfView,
     sprites::Sprites,
 };
 
@@ -22,13 +33,39 @@ pub fn spawn_player(
     mut commands: Commands,
     sprites: Res<Sprites>,
     mut meshes: ResMut<Assets<Mesh>>,
+    mut images: ResMut<Assets<Image>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
+    let size = Extent3d {
+        width: 512,
+        height: 512,
+        ..Default::default()
+    };
+    // This is the texture that the player's view cone will be rendered to.
+    let mut image = Image {
+        texture_descriptor: TextureDescriptor {
+            label: None,
+            size,
+            dimension: TextureDimension::D2,
+            format: TextureFormat::Bgra8UnormSrgb,
+            mip_level_count: 1,
+            sample_count: 1,
+            usage: TextureUsages::TEXTURE_BINDING
+                | TextureUsages::COPY_DST
+                | TextureUsages::RENDER_ATTACHMENT,
+            view_formats: &[],
+        },
+        ..Default::default()
+    };
+    image.resize(size);
+
+    // This will be the mesh for the player's field of view
     let mesh_handle = meshes.add(Mesh::new(PrimitiveTopology::TriangleList));
+    let render_target = images.add(image);
     commands.spawn(MaterialMesh2dBundle {
         mesh: mesh_handle.clone().into(),
-        material: materials.add(ColorMaterial::from(asset_server.load("bevy_icon.png"))),
+        material: materials.add(ColorMaterial::from(render_target.clone())),
         ..Default::default()
     });
     commands.spawn((
@@ -44,7 +81,27 @@ pub fn spawn_player(
         Velocity::default(),
         Player,
         CollisionGroups::new(PLAYER_GROUP, Group::all()),
-        mesh_handle,
+        FieldOfView {
+            view_distance: 256,
+            mesh: mesh_handle,
+            texture: render_target.clone(),
+        },
+    ));
+    // Spawn a camera that will be used to render the player's field of view
+    commands.spawn((
+        Camera2dBundle {
+            camera_2d: Camera2d {
+                clear_color: ClearColorConfig::Custom(Color::WHITE.with_a(0.0)),
+            },
+            camera: Camera {
+                order: -1,
+                target: RenderTarget::Image(render_target),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+        FollowPlayer,
+        RenderLayers::layer(1),
     ));
 
     // Spawn a collider so we can see how/if physics works
@@ -82,6 +139,31 @@ pub fn spawn_player(
         Collider::cuboid(8.0, 8.0),
         CollisionGroups::new(!OPAQUE_GROUP, Group::all()),
     ));
+
+    // Spawn a few sprites so we can test field of view
+    for (x, y) in [(128.0, 96.0), (96.0, 128.0), (-128.0, -32.0), (32.0, 0.0)] {
+        let transform = Transform::from_xyz(x, y, 100.0);
+        commands.spawn((
+            SpriteBundle {
+                transform,
+                texture: asset_server.load("bevy_icon_32.png"),
+                ..Default::default()
+            },
+            RenderLayers::layer(1),
+        ));
+        // let transform = Transform::from_xyz(x, y, 99.0);
+        // commands.spawn((
+        //     SpriteBundle {
+        //         transform,
+        //         texture: asset_server.load("bevy_icon_32.png"),
+        //         sprite: Sprite {
+        //             color: Color::Rgba { red: 0.5, green: 1.0, blue: 0.5, alpha: 0.2 },
+        //             ..Default::default()
+        //         },
+        //         ..Default::default()
+        //     },
+        // ));
+    }
 }
 
 pub fn player_debug(player_qry: Query<&GlobalTransform, With<Player>>, mut gizmos: Gizmos) {

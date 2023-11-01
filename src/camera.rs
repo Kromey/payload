@@ -5,8 +5,11 @@ use crate::player::Player;
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Component)]
 pub struct MainCamera;
 
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Component)]
+pub struct FollowPlayer;
+
 pub fn spawn_camera(mut commands: Commands) {
-    commands.spawn((Camera2dBundle::default(), MainCamera));
+    commands.spawn((Camera2dBundle::default(), MainCamera, FollowPlayer));
 }
 
 /// Update the camera position to follow the player
@@ -32,7 +35,7 @@ pub fn spawn_camera(mut commands: Commands) {
 pub fn follow_player(
     mut query_set: ParamSet<(
         Query<&Transform, (With<Player>, Changed<Transform>)>,
-        Query<&mut Transform, With<MainCamera>>,
+        Query<&mut Transform, With<FollowPlayer>>,
     )>,
 ) {
     // NOTE: Can we use GlobalTransform here instead?
