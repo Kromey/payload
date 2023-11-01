@@ -144,30 +144,15 @@ pub fn spawn_player(
 
     // Spawn a few sprites so we can test field of view
     for (x, y) in [(128.0, 96.0), (96.0, 128.0), (-128.0, -32.0), (32.0, 0.0)] {
-        let transform = Transform::from_xyz(x, y, 100.0);
+        let transform = Transform::from_xyz(x, y, 0.0);
         commands.spawn((
             SpriteBundle {
                 transform,
                 texture: asset_server.load("bevy_icon_32.png"),
                 ..Default::default()
             },
-            RenderLayers::layer(1),
+            RenderLayers::default().with(1),
         ));
-        let transform = Transform::from_xyz(x, y, 99.0);
-        commands.spawn((SpriteBundle {
-            transform,
-            texture: asset_server.load("bevy_icon_32.png"),
-            sprite: Sprite {
-                color: Color::Rgba {
-                    red: 0.5,
-                    green: 1.0,
-                    blue: 0.5,
-                    alpha: 0.2,
-                },
-                ..Default::default()
-            },
-            ..Default::default()
-        },));
     }
 
     // Spawn a background image
@@ -181,11 +166,11 @@ pub fn spawn_player(
     // Overlay a "fog of war"
     commands.spawn(SpriteBundle {
         sprite: Sprite {
-            color: Color::BLACK.with_a(0.95),
+            color: Color::BLACK.with_a(0.85),
             custom_size: Some(Vec2::splat(2048.0)),
             ..Default::default()
         },
-        transform: Transform::from_xyz(0.0, 0.0, 0.1),
+        transform: Transform::from_xyz(0.0, 0.0, 100.0),
         ..Default::default()
     });
 }
