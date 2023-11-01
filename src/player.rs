@@ -171,32 +171,23 @@ pub fn spawn_player(
     }
 
     // Spawn a background image
-    commands.spawn(SpriteBundle {
-        texture: asset_server.load("nebula.png"),
-        sprite: Sprite {
-            color: Color::rgb(0.2, 0.2, 0.2),
-            ..Default::default()
-        },
-        ..Default::default()
-    });
-    // Spawn a second with our view camera's RenderLayer
     commands.spawn((
         SpriteBundle {
             texture: asset_server.load("nebula.png"),
             ..Default::default()
         },
-        RenderLayers::layer(1),
+        RenderLayers::default().with(1),
     ));
     // Overlay a "fog of war"
-    // commands.spawn(SpriteBundle {
-    //     sprite: Sprite {
-    //         color: Color::BLACK.with_a(0.95),
-    //         custom_size: Some(Vec2::splat(2048.0)),
-    //         ..Default::default()
-    //     },
-    //     transform: Transform::from_xyz(0.0, 0.0, 0.1),
-    //     ..Default::default()
-    // });
+    commands.spawn(SpriteBundle {
+        sprite: Sprite {
+            color: Color::BLACK.with_a(0.95),
+            custom_size: Some(Vec2::splat(2048.0)),
+            ..Default::default()
+        },
+        transform: Transform::from_xyz(0.0, 0.0, 0.1),
+        ..Default::default()
+    });
 }
 
 pub fn player_debug(player_qry: Query<&GlobalTransform, With<Player>>, mut gizmos: Gizmos) {
