@@ -59,19 +59,28 @@ pub fn spawn_player(
         ..Default::default()
     };
     image.resize(size);
+    // Create a second image for viewing entities
+    let entity_image = image.clone();
 
     // This will be the mesh for the player's field of view
     let mesh_handle = meshes.add(Mesh::new(PrimitiveTopology::TriangleList));
     let render_target = images.add(image);
+    let entity_render_target = images.add(entity_image);
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: mesh_handle.clone().into(),
             material: materials.add(ColorMaterial::from(render_target.clone())),
-            transform: Transform::from_xyz(0.0, 0.0, 200.0),
+            transform: Transform::from_xyz(0.0, 0.0, 199.0),
             ..Default::default()
         },
-        RenderLayers::default().with(2),
+        RenderLayers::default().with(3),
     ));
+    commands.spawn(MaterialMesh2dBundle {
+        mesh: mesh_handle.clone().into(),
+        material: materials.add(ColorMaterial::from(entity_render_target.clone())),
+        transform: Transform::from_xyz(0.0, 0.0, 200.0),
+        ..Default::default()
+    });
     commands.spawn((
         SpriteBundle {
             texture: sprites.player.clone(),
@@ -96,7 +105,7 @@ pub fn spawn_player(
     commands.spawn((
         Camera2dBundle {
             camera_2d: Camera2d {
-                clear_color: ClearColorConfig::Custom(Color::WHITE.with_a(0.0)),
+                clear_color: ClearColorConfig::Custom(Color::NONE),
             },
             camera: Camera {
                 order: -1,
@@ -107,6 +116,22 @@ pub fn spawn_player(
         },
         FollowPlayer,
         RenderLayers::layer(1),
+    ));
+    // Spawn a second camera to render entities in the player's field of view
+    commands.spawn((
+        Camera2dBundle {
+            camera_2d: Camera2d {
+                clear_color: ClearColorConfig::Custom(Color::NONE),
+            },
+            camera: Camera {
+                order: -1,
+                target: RenderTarget::Image(entity_render_target),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+        FollowPlayer,
+        RenderLayers::layer(2),
     ));
 
     // Spawn a collider so we can see how/if physics works
@@ -154,7 +179,7 @@ pub fn spawn_player(
                 texture: asset_server.load("bevy_icon_32.png"),
                 ..Default::default()
             },
-            RenderLayers::default().with(1),
+            RenderLayers::layer(2),
         ));
     }
 
@@ -207,7 +232,7 @@ pub fn spawn_player(
             texture: render_target.clone(),
             ..Default::default()
         },
-        RenderLayers::default().with(2), // layers 0 and 2 make it visible only to default and "explorer" cameras
+        RenderLayers::default().with(3), // layers 0 and 3 make it visible only to default and "explorer" cameras
     ));
     // Spawn a camera that will be used to reveal the explored map
     commands.spawn((
@@ -222,7 +247,7 @@ pub fn spawn_player(
             },
             ..Default::default()
         },
-        RenderLayers::layer(2),
+        RenderLayers::layer(3),
     ));
 }
 
