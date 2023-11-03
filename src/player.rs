@@ -149,27 +149,6 @@ pub fn spawn_player(
         CollisionGroups::new(OPAQUE_GROUP, Group::all()),
     ));
 
-    // Spawn a loose item we can bump into
-    commands.spawn((
-        SpriteBundle {
-            transform: Transform::from_xyz(128.0, 0.0, 1.0),
-            sprite: Sprite {
-                color: Color::BLACK,
-                custom_size: Some(Vec2::splat(16.0)),
-                ..Default::default()
-            },
-            ..Default::default()
-        },
-        RigidBody::Dynamic,
-        // AdditionalMassProperties::Mass(1.0),
-        Damping {
-            linear_damping: 1.0,
-            angular_damping: 2.0,
-        },
-        Collider::cuboid(8.0, 8.0),
-        CollisionGroups::new(!OPAQUE_GROUP, Group::all()),
-    ));
-
     // Spawn a few sprites so we can test field of view
     for (x, y) in [(128.0, 96.0), (96.0, 128.0), (-128.0, -32.0), (32.0, 0.0)] {
         let transform = Transform::from_xyz(x, y, 0.0);
