@@ -3,7 +3,7 @@ use bevy_rapier2d::prelude::*;
 use itertools::Itertools;
 use std::f32::consts::TAU;
 
-use crate::{core::OPAQUE_GROUP, player::Player};
+use crate::core::OPAQUE_GROUP;
 
 /// How much to rotate each ray when calculating view cone
 const RAY_ROTATION_ANGLE: f32 = TAU / 360.0;
@@ -22,7 +22,7 @@ pub struct FieldOfView {
 
 pub fn update_fov(
     rapier_context: Res<RapierContext>,
-    player_qry: Query<(Entity, &GlobalTransform, &FieldOfView), With<Player>>,
+    viewer_qry: Query<(Entity, &GlobalTransform, &FieldOfView)>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut gizmos: Gizmos,
 ) {
@@ -35,11 +35,11 @@ pub fn update_fov(
     let view_cone = TAU / 12.0; // Vision only extends ±this angle
     let num_rays = (view_cone * 2.0 / RAY_ROTATION_ANGLE).floor() as usize;
 
-    for (player, player_transform, player_fov) in player_qry.iter() {
-        let max_toi = player_fov.view_distance as f32;
-        let player_facing = player_transform.right().truncate();
-        let player_pos = player_transform.translation().truncate();
-        let filter = filter.exclude_collider(player);
+    for (viewer, viewer_transform, viewer_fov) in viewer_qry.iter() {
+        let max_toi = viewer_fov.view_distance as f32;
+        let player_facing = viewer_transform.right().truncate();
+        let player_pos = viewer_transform.translation().truncate();
+        let filter = filter.exclude_collider(viewer);
 
         let mut ray = Vec2::from_angle(-view_cone).rotate(player_facing);
 
@@ -89,7 +89,7 @@ pub fn update_fov(
         }
 
         // Update our mesh
-        let mesh = meshes.get_mut(&player_fov.mesh).unwrap();
+        let mesh = meshes.get_mut(&viewer_fov.mesh).unwrap();
         // Convert our Vec2 points into [f32; 3] arrays
         let mesh_points = points
             .iter()
@@ -101,13 +101,14 @@ pub fn update_fov(
         let uv_points = points
             .iter()
             .map(|&point| {
-                let uv = (point - uv_origin) / max_toi / 2.0;
+                let uv = (point - uv_origin) / (max_toi * 2.0);
                 // Flip y: In Bevy space, y points up; in UV space, y points down!
                 [uv.x, 1.0 - uv.y]
             })
             .collect_vec();
         // We need a list of triangles in order to generate our mesh
         // Skip 0 initially as we'll insert it for each triangle
+        // TODO: Can we do this once and just re-use it? Does this ever actually change?
         let indices = (1..mesh_points.len()).collect_vec();
         let triangles = indices
             // Use windows to get every (overlapping) pair of adjacent indices
