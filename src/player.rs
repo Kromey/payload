@@ -59,13 +59,11 @@ pub fn spawn_player(
         ..Default::default()
     };
     image.resize(size);
-    // Create a second image for viewing entities
-    let entity_image = image.clone();
 
     // This will be the mesh for the player's field of view
     let mesh_handle = meshes.add(Mesh::new(PrimitiveTopology::TriangleList));
-    let render_target = images.add(image);
-    let entity_render_target = images.add(entity_image);
+    let render_target = images.add(image.clone());
+    let entity_render_target = images.add(image.clone());
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: mesh_handle.clone().into(),
@@ -131,6 +129,78 @@ pub fn spawn_player(
             ..Default::default()
         },
         FollowPlayer,
+        RenderLayers::layer(2),
+    ));
+
+    // Spawn a drone that will share FoV with the player
+    let size = Extent3d {
+        width: 256,
+        height: 256,
+        ..Default::default()
+    };
+    image.resize(size);
+    let drone_mesh_handle = meshes.add(Mesh::new(PrimitiveTopology::TriangleList));
+    let drone_render_target = images.add(image.clone());
+    let drone_entity_render_target = images.add(image.clone());
+    let drone_transform = Transform::from_xyz(179.0, 128.0, 5.0);
+    commands.spawn((
+        MaterialMesh2dBundle {
+            mesh: drone_mesh_handle.clone().into(),
+            material: materials.add(ColorMaterial::from(drone_render_target.clone())),
+            transform: Transform::from_xyz(0.0, 0.0, 199.198),
+            ..Default::default()
+        },
+        RenderLayers::default().with(3),
+    ));
+    commands.spawn(MaterialMesh2dBundle {
+        mesh: drone_mesh_handle.clone().into(),
+        material: materials.add(ColorMaterial::from(drone_entity_render_target.clone())),
+        transform: Transform::from_xyz(0.0, 0.0, 200.198),
+        ..Default::default()
+    });
+    commands.spawn((
+        SpriteBundle {
+            texture: asset_server.load("drone.png"),
+            transform: drone_transform.with_rotation(Quat::from_rotation_z(TAU / 1.8)),
+            ..Default::default()
+        },
+        CollisionGroups::new(PLAYER_GROUP, Group::all()),
+        FieldOfView {
+            view_distance: 128,
+            mesh: drone_mesh_handle,
+            texture: drone_render_target.clone(),
+        },
+    ));
+    // Spawn a camera that will be used to render the drone's field of view
+    commands.spawn((
+        Camera2dBundle {
+            camera_2d: Camera2d {
+                clear_color: ClearColorConfig::Custom(Color::NONE),
+            },
+            camera: Camera {
+                order: -1,
+                target: RenderTarget::Image(drone_render_target),
+                ..Default::default()
+            },
+            transform: drone_transform,
+            ..Default::default()
+        },
+        RenderLayers::layer(1),
+    ));
+    // Spawn a second camera to render entities in the drone's field of view
+    commands.spawn((
+        Camera2dBundle {
+            camera_2d: Camera2d {
+                clear_color: ClearColorConfig::Custom(Color::NONE),
+            },
+            camera: Camera {
+                order: -1,
+                target: RenderTarget::Image(drone_entity_render_target),
+                ..Default::default()
+            },
+            transform: drone_transform,
+            ..Default::default()
+        },
         RenderLayers::layer(2),
     ));
 
