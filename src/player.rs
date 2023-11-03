@@ -6,18 +6,16 @@ use bevy::{
     render::{
         camera::RenderTarget,
         render_resource::{
-            Extent3d, PrimitiveTopology, TextureDescriptor, TextureDimension, TextureFormat,
-            TextureUsages,
+            Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
         },
         view::RenderLayers,
     },
-    sprite::MaterialMesh2dBundle,
     window::PrimaryWindow,
 };
 use bevy_rapier2d::prelude::*;
 
 use crate::{
-    camera::{FollowPlayer, MainCamera},
+    camera::MainCamera,
     core::{OPAQUE_GROUP, PLAYER_GROUP},
     fov::FieldOfView,
     sprites::Sprites,
@@ -32,53 +30,9 @@ pub struct Player;
 pub fn spawn_player(
     mut commands: Commands,
     sprites: Res<Sprites>,
-    mut meshes: ResMut<Assets<Mesh>>,
     mut images: ResMut<Assets<Image>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
-    let size = Extent3d {
-        width: 512,
-        height: 512,
-        ..Default::default()
-    };
-    // This is the texture that the player's view cone will be rendered to.
-    let mut image = Image {
-        texture_descriptor: TextureDescriptor {
-            label: None,
-            size,
-            dimension: TextureDimension::D2,
-            format: TextureFormat::Bgra8UnormSrgb,
-            mip_level_count: 1,
-            sample_count: 1,
-            usage: TextureUsages::TEXTURE_BINDING
-                | TextureUsages::COPY_DST
-                | TextureUsages::RENDER_ATTACHMENT,
-            view_formats: &[],
-        },
-        ..Default::default()
-    };
-    image.resize(size);
-
-    // This will be the mesh for the player's field of view
-    let mesh_handle = meshes.add(Mesh::new(PrimitiveTopology::TriangleList));
-    let render_target = images.add(image.clone());
-    let entity_render_target = images.add(image.clone());
-    commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: mesh_handle.clone().into(),
-            material: materials.add(ColorMaterial::from(render_target.clone())),
-            transform: Transform::from_xyz(0.0, 0.0, 199.0),
-            ..Default::default()
-        },
-        RenderLayers::default().with(3),
-    ));
-    commands.spawn(MaterialMesh2dBundle {
-        mesh: mesh_handle.clone().into(),
-        material: materials.add(ColorMaterial::from(entity_render_target.clone())),
-        transform: Transform::from_xyz(0.0, 0.0, 200.0),
-        ..Default::default()
-    });
     commands.spawn((
         SpriteBundle {
             texture: sprites.player.clone(),
@@ -93,72 +47,11 @@ pub fn spawn_player(
         Velocity::default(),
         Player,
         CollisionGroups::new(PLAYER_GROUP, Group::all()),
-        FieldOfView {
-            view_distance: 256.0,
-            view_angle: TAU / 12.0,
-            mesh: mesh_handle,
-            texture: render_target.clone(),
-        },
-    ));
-    // Spawn a camera that will be used to render the player's field of view
-    commands.spawn((
-        Camera2dBundle {
-            camera_2d: Camera2d {
-                clear_color: ClearColorConfig::Custom(Color::NONE),
-            },
-            camera: Camera {
-                order: -1,
-                target: RenderTarget::Image(render_target),
-                ..Default::default()
-            },
-            ..Default::default()
-        },
-        FollowPlayer,
-        RenderLayers::layer(1),
-    ));
-    // Spawn a second camera to render entities in the player's field of view
-    commands.spawn((
-        Camera2dBundle {
-            camera_2d: Camera2d {
-                clear_color: ClearColorConfig::Custom(Color::NONE),
-            },
-            camera: Camera {
-                order: -1,
-                target: RenderTarget::Image(entity_render_target),
-                ..Default::default()
-            },
-            ..Default::default()
-        },
-        FollowPlayer,
-        RenderLayers::layer(2),
+        FieldOfView::new(256.0, TAU / 12.0),
     ));
 
     // Spawn a drone that will share FoV with the player
-    let size = Extent3d {
-        width: 256,
-        height: 256,
-        ..Default::default()
-    };
-    image.resize(size);
-    let drone_mesh_handle = meshes.add(Mesh::new(PrimitiveTopology::TriangleList));
-    let drone_render_target = images.add(image.clone());
-    let drone_entity_render_target = images.add(image.clone());
     let drone_transform = Transform::from_xyz(179.0, 128.0, 5.0);
-    commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: drone_mesh_handle.clone().into(),
-            material: materials.add(ColorMaterial::from(drone_render_target.clone())),
-            transform: Transform::from_xyz(0.0, 0.0, 199.198),
-            ..Default::default()
-        },
-        RenderLayers::default().with(3),
-    ));
-    commands.spawn(MaterialMesh2dBundle {
-        mesh: drone_mesh_handle.clone().into(),
-        material: materials.add(ColorMaterial::from(drone_entity_render_target.clone())),
-        transform: Transform::from_xyz(0.0, 0.0, 200.198),
-        ..Default::default()
-    });
     commands.spawn((
         SpriteBundle {
             texture: asset_server.load("drone.png"),
@@ -166,44 +59,7 @@ pub fn spawn_player(
             ..Default::default()
         },
         CollisionGroups::new(PLAYER_GROUP, Group::all()),
-        FieldOfView {
-            view_distance: 128.0,
-            view_angle: TAU / 12.0,
-            mesh: drone_mesh_handle,
-            texture: drone_render_target.clone(),
-        },
-    ));
-    // Spawn a camera that will be used to render the drone's field of view
-    commands.spawn((
-        Camera2dBundle {
-            camera_2d: Camera2d {
-                clear_color: ClearColorConfig::Custom(Color::NONE),
-            },
-            camera: Camera {
-                order: -1,
-                target: RenderTarget::Image(drone_render_target),
-                ..Default::default()
-            },
-            transform: drone_transform,
-            ..Default::default()
-        },
-        RenderLayers::layer(1),
-    ));
-    // Spawn a second camera to render entities in the drone's field of view
-    commands.spawn((
-        Camera2dBundle {
-            camera_2d: Camera2d {
-                clear_color: ClearColorConfig::Custom(Color::NONE),
-            },
-            camera: Camera {
-                order: -1,
-                target: RenderTarget::Image(drone_entity_render_target),
-                ..Default::default()
-            },
-            transform: drone_transform,
-            ..Default::default()
-        },
-        RenderLayers::layer(2),
+        // FieldOfView::new(128.0, TAU / 10.0),
     ));
 
     // Spawn a collider so we can see how/if physics works
