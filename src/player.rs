@@ -94,7 +94,8 @@ pub fn spawn_player(
         Player,
         CollisionGroups::new(PLAYER_GROUP, Group::all()),
         FieldOfView {
-            view_distance: 256,
+            view_distance: 256.0,
+            view_angle: TAU / 12.0,
             mesh: mesh_handle,
             texture: render_target.clone(),
         },
@@ -166,7 +167,8 @@ pub fn spawn_player(
         },
         CollisionGroups::new(PLAYER_GROUP, Group::all()),
         FieldOfView {
-            view_distance: 128,
+            view_distance: 128.0,
+            view_angle: TAU / 12.0,
             mesh: drone_mesh_handle,
             texture: drone_render_target.clone(),
         },
