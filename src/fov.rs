@@ -2,6 +2,8 @@ use bevy::{prelude::*, render::render_resource::PrimitiveTopology};
 use bevy_rapier2d::prelude::*;
 
 mod helpers;
+mod viewable;
+pub use viewable::{update_viewables, Viewable};
 
 #[derive(Debug, Clone, Component)]
 pub struct FieldOfView {

@@ -17,7 +17,7 @@ use bevy_rapier2d::prelude::*;
 use crate::{
     camera::{Follow, MainCamera},
     core::{OPAQUE_GROUP, PLAYER_GROUP},
-    fov::FieldOfView,
+    fov::{FieldOfView, Viewable},
     sprites::Sprites,
 };
 
@@ -92,7 +92,7 @@ pub fn spawn_player(
                 texture: asset_server.load("bevy_icon_32.png"),
                 ..Default::default()
             },
-            RenderLayers::layer(2),
+            Viewable::Dynamic,
         ));
     }
 
@@ -102,7 +102,7 @@ pub fn spawn_player(
             texture: asset_server.load("nebula.png"),
             ..Default::default()
         },
-        RenderLayers::layer(1), // Layer 1 is where the fov camera looks; hides this from the default camera
+        Viewable::Static,
     ));
     // Overlay a "fog of war"
     commands.spawn(SpriteBundle {

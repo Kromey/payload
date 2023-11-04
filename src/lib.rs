@@ -32,6 +32,7 @@ pub fn run_game() {
                 player::player_debug,
                 fov::add_fov,
                 fov::update_fov.after(fov::add_fov),
+                fov::update_viewables,
                 (player::player_walk, player::player_face).run_if(in_state(GameState::InGame)),
             ),
         )
