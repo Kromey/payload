@@ -7,6 +7,7 @@ mod camera;
 mod core;
 mod fov;
 mod player;
+mod setup;
 mod sprites;
 
 pub fn run_game() {
@@ -43,7 +44,11 @@ pub fn run_game() {
         )
         .add_systems(
             OnEnter(GameState::InGame),
-            (player::spawn_player, fov::setup_fog_of_war),
+            (
+                player::spawn_player,
+                fov::setup_fog_of_war,
+                setup::setup_test_entities,
+            ),
         )
         .run();
 }
