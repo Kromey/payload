@@ -41,6 +41,9 @@ pub fn run_game() {
             PostUpdate,
             camera::follow_entity.after(TransformSystem::TransformPropagate),
         )
-        .add_systems(OnEnter(GameState::InGame), player::spawn_player)
+        .add_systems(
+            OnEnter(GameState::InGame),
+            (player::spawn_player, fov::setup_fog_of_war),
+        )
         .run();
 }
