@@ -40,8 +40,10 @@ pub fn follow_entity(
             if following_transform.is_changed() {
                 // Grab the translation so we can drop this mutable borrow and re-run the query
                 let translation = following_transform.translation;
-                if let Ok(mut transform) = transform_qry.get_mut(follower) {
-                    transform.translation = translation;
+                if let Ok(transform) = transform_qry.get_mut(follower) {
+                    // Ensure we don't trigger change detection if no change actually occurs
+                    let mut follower_translation = transform.map_unchanged(|t| &mut t.translation);
+                    follower_translation.set_if_neq(translation);
                 }
             }
         }

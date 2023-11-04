@@ -91,7 +91,7 @@ pub fn player_walk(
             velocity *= 0.2;
         }
 
-        if velocity.length_squared() > 0.0 {
+        if velocity.length_squared() > f32::EPSILON {
             // Use get_or_insert and then add our velocity
             // This preserves any forces acting on the player added by other systems
             *player_velocity.translation.get_or_insert(Vec2::ZERO) += velocity;
@@ -111,7 +111,10 @@ pub fn player_face(
                     if let Ok(mut player_transform) = player_qry.get_single_mut() {
                         let to = look - player_transform.translation.truncate();
                         let facing = player_transform.local_x().truncate();
-                        player_transform.rotate_z(facing.angle_between(to));
+                        let angle = facing.angle_between(to);
+                        if angle.abs() > f32::EPSILON {
+                            player_transform.rotate_z(facing.angle_between(to));
+                        }
                     }
                 }
             }
