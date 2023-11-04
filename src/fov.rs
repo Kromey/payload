@@ -27,13 +27,14 @@ pub fn add_fov(
     mut images: ResMut<Assets<Image>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    for (_entity, mut fov) in fov_query.iter_mut() {
+    for (entity, mut fov) in fov_query.iter_mut() {
         let image = helpers::make_fov_texture(&fov);
 
         // Create a mesh to render the field of view to
         let mesh = meshes.add(Mesh::new(PrimitiveTopology::TriangleList));
         // Spawn the layers for rendering field of view
         helpers::make_fov_layers(
+            entity,
             image,
             mesh.clone(),
             &mut images,

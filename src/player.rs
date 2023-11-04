@@ -15,7 +15,7 @@ use bevy::{
 use bevy_rapier2d::prelude::*;
 
 use crate::{
-    camera::MainCamera,
+    camera::{Follow, MainCamera},
     core::{OPAQUE_GROUP, PLAYER_GROUP},
     fov::FieldOfView,
     sprites::Sprites,
@@ -32,23 +32,29 @@ pub fn spawn_player(
     sprites: Res<Sprites>,
     mut images: ResMut<Assets<Image>>,
     asset_server: Res<AssetServer>,
+    camera_qry: Query<Entity, With<MainCamera>>,
 ) {
-    commands.spawn((
-        SpriteBundle {
-            texture: sprites.player.clone(),
-            transform: Transform::from_xyz(0.0, 0.0, 5.0),
-            ..Default::default()
-        },
-        Collider::capsule(Vec2::new(0.0, -5.0), Vec2::new(0.0, 5.0), 12.0),
-        KinematicCharacterController {
-            custom_mass: Some(50.0),
-            ..Default::default()
-        },
-        Velocity::default(),
-        Player,
-        CollisionGroups::new(PLAYER_GROUP, Group::all()),
-        FieldOfView::new(256.0, TAU / 12.0),
-    ));
+    let player_entity = commands
+        .spawn((
+            SpriteBundle {
+                texture: sprites.player.clone(),
+                transform: Transform::from_xyz(0.0, 0.0, 5.0),
+                ..Default::default()
+            },
+            Collider::capsule(Vec2::new(0.0, -5.0), Vec2::new(0.0, 5.0), 12.0),
+            KinematicCharacterController {
+                custom_mass: Some(50.0),
+                ..Default::default()
+            },
+            Velocity::default(),
+            Player,
+            CollisionGroups::new(PLAYER_GROUP, Group::all()),
+            FieldOfView::new(256.0, TAU / 12.0),
+        ))
+        .id();
+    for camera in camera_qry.iter() {
+        commands.entity(camera).insert(Follow(player_entity));
+    }
 
     // Spawn a drone that will share FoV with the player
     let drone_transform = Transform::from_xyz(179.0, 128.0, 5.0);
@@ -59,7 +65,7 @@ pub fn spawn_player(
             ..Default::default()
         },
         CollisionGroups::new(PLAYER_GROUP, Group::all()),
-        // FieldOfView::new(128.0, TAU / 10.0),
+        FieldOfView::new(128.0, TAU / 10.0),
     ));
 
     // Spawn a collider so we can see how/if physics works

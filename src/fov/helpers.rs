@@ -16,7 +16,7 @@ use bevy::{
 use bevy_rapier2d::prelude::*;
 use itertools::Itertools;
 
-use crate::{camera::FollowPlayer, core::OPAQUE_GROUP};
+use crate::{camera::Follow, core::OPAQUE_GROUP};
 
 use super::FieldOfView;
 
@@ -83,6 +83,7 @@ pub(super) fn make_fov_texture(fov: &FieldOfView) -> Image {
 }
 
 pub(super) fn make_fov_layers(
+    viewer: Entity,
     image: Image,
     mesh: Handle<Mesh>,
     images: &mut Assets<Image>,
@@ -112,7 +113,7 @@ pub(super) fn make_fov_layers(
                 },
                 ..Default::default()
             },
-            FollowPlayer,
+            Follow(viewer),
             layer.camera_render_layers(),
         ));
     }

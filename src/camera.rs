@@ -1,18 +1,16 @@
 use bevy::prelude::*;
 
-use crate::player::Player;
-
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Component)]
 pub struct MainCamera;
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Component)]
-pub struct FollowPlayer;
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Component)]
+pub struct Follow(pub Entity);
 
 pub fn spawn_camera(mut commands: Commands) {
-    commands.spawn((Camera2dBundle::default(), MainCamera, FollowPlayer));
+    commands.spawn((Camera2dBundle::default(), MainCamera));
 }
 
-/// Update the camera position to follow the player
+/// Update the camera position to follow an entity
 ///
 /// # Running this system
 ///
@@ -22,31 +20,30 @@ pub fn spawn_camera(mut commands: Commands) {
 ///
 /// # Possible future bug?
 ///
-/// This system uses the `Transform` component, which is fine as long as both camera and player
-/// have the same parent, or are both parent-less. If camera and/or player are ever parented to
+/// This system uses the `Transform` component, which is fine as long as both camera and target
+/// have the same parent, or are both parent-less. If camera and/or target are ever parented to
 /// a different entity, then relying on `Transform` will no longer work, but neither can we use
 /// `GlobalTransform` because that hasn't been updated yet!
 ///
-/// Another potential solution is to child the camera to the player and enforce a `Vec3::ZERO`
-/// translation on the camera to keep it on the player; if the camera needs to be moved, or the
-/// player needs to be despawned, this relationship can be "broken" at that time and then
+/// Another potential solution is to child the camera to the target and enforce a `Vec3::ZERO`
+/// translation on the camera to keep it on the target; if the camera needs to be moved, or the
+/// target needs to be despawned, this relationship can be "broken" at that time and then
 /// recreated after.
 #[allow(clippy::type_complexity)]
-pub fn follow_player(
-    mut query_set: ParamSet<(
-        Query<&Transform, (With<Player>, Changed<Transform>)>,
-        Query<&mut Transform, With<FollowPlayer>>,
-    )>,
+pub fn follow_entity(
+    follower_qry: Query<(Entity, &Follow)>,
+    mut transform_qry: Query<&mut Transform>,
 ) {
-    // NOTE: Can we use GlobalTransform here instead?
-    // Transform has not yet been propagated to GlobalTransform, but if camera and player
-    // don't both have the same parent (or if they aren't both parent-less) this will break
-    let player_translation = match query_set.p0().get_single() {
-        Ok(transform) => transform.translation,
-        Err(_) => return,
-    };
-
-    for mut camera_transform in query_set.p1().iter_mut() {
-        camera_transform.translation = player_translation;
+    for (follower, &Follow(following)) in follower_qry.iter() {
+        // Have to borrow mutably to get the change detection logic via Mut<T>
+        if let Ok(following_transform) = transform_qry.get_mut(following) {
+            if following_transform.is_changed() {
+                // Grab the translation so we can drop this mutable borrow and re-run the query
+                let translation = following_transform.translation;
+                if let Ok(mut transform) = transform_qry.get_mut(follower) {
+                    transform.translation = translation;
+                }
+            }
+        }
     }
 }
