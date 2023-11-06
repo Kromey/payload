@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use crate::{
+    ai::DroneAI,
     core::{OPAQUE_GROUP, PLAYER_GROUP},
     fov::{FieldOfView, Viewable},
 };
@@ -19,6 +20,7 @@ pub(crate) fn setup_test_entities(mut commands: Commands, asset_server: Res<Asse
         },
         CollisionGroups::new(PLAYER_GROUP, Group::all()),
         FieldOfView::new(128.0, TAU / 10.0),
+        DroneAI,
     ));
 
     // Spawn a collider so we can see how/if physics works

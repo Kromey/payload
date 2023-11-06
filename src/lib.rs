@@ -3,6 +3,7 @@ use core::GameState;
 use bevy::{prelude::*, transform::TransformSystem};
 use bevy_rapier2d::prelude::*;
 
+mod ai;
 mod camera;
 mod core;
 mod fov;
@@ -34,6 +35,7 @@ pub fn run_game() {
                 fov::add_fov,
                 fov::update_fov.after(fov::add_fov),
                 fov::update_viewables,
+                ai::drone_idle,
                 (player::player_walk, player::player_face).run_if(in_state(GameState::InGame)),
             ),
         )
