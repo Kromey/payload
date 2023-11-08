@@ -633,8 +633,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_rapier2d"
-version = "0.22.0"
-source = "git+https://github.com/dimforge/bevy_rapier?rev=refs/pull/439/head#aa4aa2c046221a237a8fb7a7e635f116e36b3ab3"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "58085b0900f932a9fbd2cdb9db0869effa9a0ebb0ad9ddf9a2474cf60ce6789d"
 dependencies = [
  "bevy",
  "bitflags 2.4.0",
@@ -1288,7 +1289,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e16e44ab292b1dddfdaf7be62cfd8877df52f2f3fde5858d95bab606be259f20"
 dependencies = [
  "bitflags 2.4.0",
- "libloading 0.7.4",
+ "libloading 0.8.1",
  "winapi",
 ]
 
@@ -3311,7 +3312,7 @@ dependencies = [
  "js-sys",
  "khronos-egl",
  "libc",
- "libloading 0.7.4",
+ "libloading 0.8.1",
  "log",
  "metal",
  "naga",
