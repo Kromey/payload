@@ -2,7 +2,6 @@ use core::GameState;
 
 use bevy::{prelude::*, transform::TransformSystem};
 use bevy_rapier2d::prelude::*;
-use rand::WorldSeed;
 
 mod ai;
 mod camera;
@@ -28,7 +27,6 @@ pub fn run_game() {
 
     app.add_systems(Update, bevy::window::close_on_esc)
         .add_state::<core::GameState>()
-        .insert_resource(WorldSeed::from_seed("Test Seed"))
         .add_systems(Startup, (camera::spawn_camera, sprites::load_sprites))
         .add_systems(
             Update,
@@ -50,7 +48,6 @@ pub fn run_game() {
         .add_systems(
             OnEnter(GameState::InGame),
             (
-                rand::test_rand,
                 player::spawn_player,
                 fov::setup_fog_of_war,
                 setup::setup_test_entities,

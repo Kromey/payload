@@ -6,11 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+bevy_rand = { version = "0.4.0", features = ["wyrand"] }
 bevy_rapier2d = { version = "0.22.0", features = ["parallel"] }
 itertools = "0.11.0"
 rand = "0.8.5"
-rand_chacha = "0.3.1"
-rand_seeder = "0.2.3"
 
 [dependencies.bevy]
 version = "0.11"
