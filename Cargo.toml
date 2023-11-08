@@ -33,7 +33,7 @@ features = [
   "png",
 
   # serde
-  "serialize",
+  # "serialize",
 ]
 
 [profile.dev]
