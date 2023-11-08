@@ -7,12 +7,13 @@ edition = "2021"
 
 [dependencies]
 bevy_rand = { version = "0.4.0", features = ["wyrand"] }
-bevy_rapier2d = { version = "0.22.0", features = ["parallel"] }
+# Using this git branch only until Rapier is updated for Bevy 0.12
+bevy_rapier2d = { git = "https://github.com/dimforge/bevy_rapier", rev = "refs/pull/439/head", features = ["parallel"] }
 itertools = "0.11.0"
 rand = "0.8.5"
 
 [dependencies.bevy]
-version = "0.11"
+version = "0.12"
 # Disable the default features if there are any that you do not want
 default-features = false
 features = [ 
