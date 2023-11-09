@@ -7,7 +7,13 @@ use crate::{
     ai::DroneAI,
     core::{OPAQUE_GROUP, PLAYER_GROUP},
     fov::{FieldOfView, Viewable},
+    rand::*,
 };
+
+pub fn test_rng(mut world_rng: ResMut<WorldRng>) {
+    let mut rng = world_rng.fork_inner();
+    info!("Random number: {}", rng.gen::<u8>());
+}
 
 pub(crate) fn setup_test_entities(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Spawn a drone that will share FoV with the player

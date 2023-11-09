@@ -10,6 +10,7 @@ bevy_rand = { version = "0.4.0", features = ["wyrand"] }
 bevy_rapier2d = { version = "0.23.0", features = ["parallel"] }
 itertools = "0.11.0"
 rand = "0.8.5"
+rand_seeder = "0.2.3"
 
 [dependencies.bevy]
 version = "0.12"

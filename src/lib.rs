@@ -25,6 +25,11 @@ pub fn run_game() {
     #[cfg(debug_assertions)]
     app.add_plugins(RapierDebugRenderPlugin::default());
 
+    // Adding the plugin, even though we promptly replace the RNG, ensures our types are registered with Bevy
+    app.add_plugins(rand::RandPlugin::default())
+        // TODO: Allow world seed to be configurable
+        .insert_resource(rand::world_seed("Test seed"));
+
     app.add_systems(Update, bevy::window::close_on_esc)
         .add_state::<core::GameState>()
         .add_systems(Startup, (camera::spawn_camera, sprites::load_sprites))
@@ -48,6 +53,7 @@ pub fn run_game() {
         .add_systems(
             OnEnter(GameState::InGame),
             (
+                setup::test_rng,
                 player::spawn_player,
                 fov::setup_fog_of_war,
                 setup::setup_test_entities,
