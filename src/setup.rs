@@ -6,7 +6,7 @@ use bevy_rapier2d::prelude::*;
 use crate::{
     ai::DroneAI,
     core::{OPAQUE_GROUP, PLAYER_GROUP},
-    fov::{FieldOfView, Viewable},
+    // fov::{FieldOfView, Viewable},
     rand::*,
 };
 
@@ -16,6 +16,8 @@ pub fn test_rng(mut world_rng: ResMut<WorldRng>) {
 }
 
 pub(crate) fn setup_test_entities(mut commands: Commands, asset_server: Res<AssetServer>) {
+    #![allow(unreachable_code, unused)]
+    return;
     // Spawn a drone that will share FoV with the player
     let drone_transform = Transform::from_xyz(179.0, 128.0, 5.0);
     commands.spawn((
@@ -25,7 +27,7 @@ pub(crate) fn setup_test_entities(mut commands: Commands, asset_server: Res<Asse
             ..Default::default()
         },
         CollisionGroups::new(PLAYER_GROUP, Group::all()),
-        FieldOfView::new(128.0, TAU / 10.0),
+        // FieldOfView::new(128.0, TAU / 10.0),
         DroneAI,
     ));
 
@@ -53,7 +55,7 @@ pub(crate) fn setup_test_entities(mut commands: Commands, asset_server: Res<Asse
                 texture: asset_server.load("bevy_icon_32.png"),
                 ..Default::default()
             },
-            Viewable::Dynamic,
+            // Viewable::Dynamic,
         ));
     }
 }

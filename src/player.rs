@@ -6,7 +6,7 @@ use bevy_rapier2d::prelude::*;
 use crate::{
     camera::{Follow, MainCamera},
     core::PLAYER_GROUP,
-    fov::FieldOfView,
+    // fov::FieldOfView,
     sprites::Sprites,
 };
 
@@ -36,7 +36,7 @@ pub fn spawn_player(
             Velocity::default(),
             Player,
             CollisionGroups::new(PLAYER_GROUP, Group::all()),
-            FieldOfView::new(256.0, TAU / 12.0),
+            // FieldOfView::new(256.0, TAU / 12.0),
         ))
         .id();
     // Make sure the game's camera follows the player
