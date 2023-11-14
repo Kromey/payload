@@ -1295,6 +1295,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2e66c9d817f1720209181c316d28635c050fa304f9c79e47a520882661b7308"
 
 [[package]]
+name = "delaunator"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ab46e386c7a38300a0d93b0f3e484bc2ee0aded66c47b14762ec9ab383934fa"
+dependencies = [
+ "robust",
+]
+
+[[package]]
 name = "dispatch"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2312,7 +2321,9 @@ dependencies = [
  "bevy",
  "bevy_rand",
  "bevy_rapier2d",
+ "delaunator",
  "itertools",
+ "petgraph",
  "rand",
  "rand_seeder",
 ]

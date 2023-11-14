@@ -1,13 +1,39 @@
 use bevy::prelude::*;
+use itertools::Itertools;
+use petgraph::prelude::UnGraphMap;
 
 use crate::rand::*;
 
 const TILE_SIZE: f32 = 16.0;
 const TILE_Z: f32 = 1.0;
-const OFFSET_X: i32 = -32;
+const OFFSET: IVec2 = IVec2::new(-32, 0);
+
+#[derive(Debug, Default, Clone, Resource)]
+pub struct Rooms {
+    rooms: Vec<IRect>,
+    graph: UnGraphMap<usize, f32>,
+}
+impl Rooms {
+    fn len(&self) -> usize {
+        self.rooms.len()
+    }
+
+    fn push(&mut self, new_room: IRect) {
+        self.rooms.push(new_room);
+        self.graph.add_node(self.rooms.len() - 1);
+    }
+
+    fn iter(&self) -> impl Iterator<Item = &IRect> {
+        self.rooms.iter()
+    }
+
+    fn add_edge(&mut self, p: usize, q: usize, weight: f32) {
+        self.graph.add_edge(p, q, weight);
+    }
+}
 
 pub fn setup_map(mut commands: Commands, mut _world_rng: ResMut<WorldRng>) {
-    let mut rooms = Vec::<IRect>::new();
+    let mut rooms = Rooms::default();
 
     let ship_length = 64;
     let max_center = 24;
@@ -52,11 +78,47 @@ pub fn setup_map(mut commands: Commands, mut _world_rng: ResMut<WorldRng>) {
             continue;
         }
         let new_room = IRect::from_center_size(center, size);
-        rooms.push(new_room);
-        let mut center = new_room.as_rect().center() * TILE_SIZE;
-        center.x += OFFSET_X as f32 * TILE_SIZE;
-        let size = new_room.as_rect().size() * TILE_SIZE;
-        let color = Color::from(rng.gen::<[f32; 3]>()).with_a(0.65);
+        rooms.rooms.push(new_room);
+        rooms.graph.add_node(rooms.len() - 1);
+        if center.y > 0 {
+            let center = IVec2::new(center.x, -center.y);
+            let new_room = IRect::from_center_size(center, size);
+            rooms.push(new_room);
+        }
+    }
+
+    // Calculate Delauney triangulation of the rooms
+    let points = rooms
+        .iter()
+        .map(|room| {
+            let center = room.as_rect().center().as_dvec2();
+            delaunator::Point {
+                x: center.x,
+                y: center.y,
+            }
+        })
+        .collect_vec();
+    let triangulation = delaunator::triangulate(&points);
+
+    // This is adapted from `forEachTriangleEdge` function at <https://mapbox.github.io/delaunator/>
+    // Kudos to "1L-1UX" (illiux#5291) on Roguelikes Discord - Thank you!
+    for e in 0..triangulation.triangles.len() {
+        let o = triangulation.halfedges[e];
+        if e > o || o == delaunator::EMPTY {
+            let p = triangulation.triangles[e];
+            let q = triangulation.triangles[delaunator::next_halfedge(e)];
+
+            rooms.add_edge(p, q, 1.0);
+        }
+    }
+
+    // Spawn rooms
+    for room in rooms.iter() {
+        let center = room.as_rect().center() * TILE_SIZE + OFFSET.as_vec2() * TILE_SIZE;
+        let size = room.as_rect().size() * TILE_SIZE;
+        // Ensure we neatly mirror our color for mirrored rooms
+        let mut color_rng = seed_rng(room.center().abs());
+        let color = Color::from(color_rng.gen::<[f32; 3]>()).with_a(0.65);
         // Now spawn the room
         commands.spawn(SpriteBundle {
             sprite: Sprite {
@@ -67,19 +129,27 @@ pub fn setup_map(mut commands: Commands, mut _world_rng: ResMut<WorldRng>) {
             transform: Transform::from_translation(center.extend(TILE_Z)),
             ..Default::default()
         });
-        if center.y > 0.0 {
-            // And reflect it across the ship's spine
-            commands.spawn(SpriteBundle {
-                sprite: Sprite {
-                    color,
-                    custom_size: Some(size),
-                    ..Default::default()
-                },
-                transform: Transform::from_translation(
-                    (center * Vec2::new(1.0, -1.0)).extend(TILE_Z),
-                ),
-                ..Default::default()
-            });
+    }
+
+    commands.insert_resource(rooms);
+}
+
+pub fn debug_triangulation(mut gizmos: Gizmos, rooms: Res<Rooms>) {
+    for (idx, room) in rooms.iter().enumerate() {
+        let start = room.as_rect().center() * TILE_SIZE + OFFSET.as_vec2() * TILE_SIZE;
+        for (a, b, weight) in rooms.graph.edges(idx) {
+            let to_idx = std::cmp::max(a, b);
+            if to_idx <= idx {
+                continue;
+            }
+            let to =
+                rooms.rooms[to_idx].as_rect().center() * TILE_SIZE + OFFSET.as_vec2() * TILE_SIZE;
+            let color = if *weight == 0.0 {
+                Color::RED.with_a(0.5)
+            } else {
+                Color::GREEN.with_a(0.25)
+            };
+            gizmos.line_2d(start, to, color);
         }
     }
 }

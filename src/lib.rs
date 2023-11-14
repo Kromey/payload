@@ -43,7 +43,12 @@ pub fn run_game() {
                 // fov::update_fov.after(fov::add_fov),
                 // fov::update_viewables,
                 ai::drone_idle,
-                (player::player_walk, player::player_face).run_if(in_state(GameState::InGame)),
+                (
+                    player::player_walk,
+                    player::player_face,
+                    map::debug_triangulation,
+                )
+                    .run_if(in_state(GameState::InGame)),
             ),
         )
         // Update camera position in PostUpdate, but before Bevy propagates Transform to GlobalTransform

@@ -8,7 +8,9 @@ edition = "2021"
 [dependencies]
 bevy_rand = { version = "0.4.0", features = ["wyrand"] }
 bevy_rapier2d = { version = "0.23.0", features = ["parallel"] }
+delaunator = "1.0.2"
 itertools = "0.11.0"
+petgraph = { version = "0.6.4", default-features = false, features = ["graphmap"] }
 rand = "0.8.5"
 rand_seeder = "0.2.3"
 
