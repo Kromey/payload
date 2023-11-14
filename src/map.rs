@@ -112,6 +112,24 @@ pub fn setup_map(mut commands: Commands, mut _world_rng: ResMut<WorldRng>) {
         }
     }
 
+    // Find adjacent rooms
+    let raw_room_list = rooms.rooms.clone();
+    for (idx, room) in raw_room_list.iter().enumerate() {
+        let adjacency = room.inset(1);
+        for (other_idx, other_room) in raw_room_list.iter().enumerate() {
+            if other_idx <= idx {
+                continue;
+            }
+            let size = adjacency.intersect(*other_room).size();
+            let area = size.x * size.y;
+            // If we touch only on a corner, the intersection has area 1 - but we don't care about that
+            if area > 1 {
+                // Set the weight for this edge to 0 to signify adjacency
+                rooms.add_edge(idx, other_idx, 0.0);
+            }
+        }
+    }
+
     // Spawn rooms
     for room in rooms.iter() {
         let center = room.as_rect().center() * TILE_SIZE + OFFSET.as_vec2() * TILE_SIZE;
@@ -145,9 +163,9 @@ pub fn debug_triangulation(mut gizmos: Gizmos, rooms: Res<Rooms>) {
             let to =
                 rooms.rooms[to_idx].as_rect().center() * TILE_SIZE + OFFSET.as_vec2() * TILE_SIZE;
             let color = if *weight == 0.0 {
-                Color::RED.with_a(0.5)
-            } else {
                 Color::GREEN.with_a(0.25)
+            } else {
+                Color::BLUE.with_a(0.25)
             };
             gizmos.line_2d(start, to, color);
         }
