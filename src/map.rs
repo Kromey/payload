@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use itertools::Itertools;
-use petgraph::prelude::UnGraphMap;
+use petgraph::{algo::min_spanning_tree, data::FromElements, prelude::UnGraphMap};
 
 use crate::rand::*;
 
@@ -12,6 +12,7 @@ const OFFSET: IVec2 = IVec2::new(-32, 0);
 pub struct Rooms {
     rooms: Vec<IRect>,
     graph: UnGraphMap<usize, f32>,
+    mst: UnGraphMap<usize, f32>,
 }
 impl Rooms {
     fn len(&self) -> usize {
@@ -130,6 +131,9 @@ pub fn setup_map(mut commands: Commands, mut _world_rng: ResMut<WorldRng>) {
         }
     }
 
+    // Calculate MST
+    rooms.mst = UnGraphMap::from_elements(min_spanning_tree(&rooms.graph));
+
     // Spawn rooms
     for room in rooms.iter() {
         let center = room.as_rect().center() * TILE_SIZE + OFFSET.as_vec2() * TILE_SIZE;
@@ -162,11 +166,14 @@ pub fn debug_triangulation(mut gizmos: Gizmos, rooms: Res<Rooms>) {
             }
             let to =
                 rooms.rooms[to_idx].as_rect().center() * TILE_SIZE + OFFSET.as_vec2() * TILE_SIZE;
-            let color = if *weight == 0.0 {
-                Color::GREEN.with_a(0.25)
+            let mut color = if *weight == 0.0 {
+                Color::GREEN.with_a(0.5)
             } else {
-                Color::BLUE.with_a(0.25)
+                Color::BLUE.with_a(0.5)
             };
+            if rooms.mst.contains_edge(idx, to_idx) {
+                color = Color::GOLD;
+            }
             gizmos.line_2d(start, to, color);
         }
     }
