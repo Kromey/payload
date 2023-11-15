@@ -109,7 +109,7 @@ pub fn setup_map(mut commands: Commands, mut _world_rng: ResMut<WorldRng>) {
             let p = triangulation.triangles[e];
             let q = triangulation.triangles[delaunator::next_halfedge(e)];
 
-            rooms.add_edge(p, q, 1.0);
+            rooms.add_edge(p, q, 1.0 + rng.gen::<f32>() / 20.0);
         }
     }
 
@@ -126,7 +126,7 @@ pub fn setup_map(mut commands: Commands, mut _world_rng: ResMut<WorldRng>) {
             // If we touch only on a corner, the intersection has area 1 - but we don't care about that
             if area > 1 {
                 // Set the weight for this edge to 0 to signify adjacency
-                rooms.add_edge(idx, other_idx, 0.0);
+                rooms.add_edge(idx, other_idx, rng.gen::<f32>() / 20.0);
             }
         }
     }
