@@ -6,7 +6,6 @@ use crate::rand::*;
 
 const TILE_SIZE: f32 = 16.0;
 const TILE_Z: f32 = 1.0;
-const OFFSET: IVec2 = IVec2::new(-32, 0);
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 enum EdgeWeight {
@@ -153,7 +152,7 @@ pub fn setup_map(mut commands: Commands, mut _world_rng: ResMut<WorldRng>) {
 
     // Spawn rooms
     for room in rooms.iter() {
-        let center = room.as_rect().center() * TILE_SIZE + OFFSET.as_vec2() * TILE_SIZE;
+        let center = room.as_rect().center() * TILE_SIZE;
         let size = room.as_rect().size() * TILE_SIZE;
         // Ensure we neatly mirror our color for mirrored rooms
         let mut color_rng = seed_rng(room.center().abs());
@@ -175,14 +174,13 @@ pub fn setup_map(mut commands: Commands, mut _world_rng: ResMut<WorldRng>) {
 
 pub fn debug_triangulation(mut gizmos: Gizmos, rooms: Res<Rooms>) {
     for (idx, room) in rooms.iter().enumerate() {
-        let start = room.as_rect().center() * TILE_SIZE + OFFSET.as_vec2() * TILE_SIZE;
+        let start = room.as_rect().center() * TILE_SIZE;
         for (a, b, weight) in rooms.graph.edges(idx) {
             let to_idx = std::cmp::max(a, b);
             if to_idx <= idx {
                 continue;
             }
-            let to =
-                rooms.rooms[to_idx].as_rect().center() * TILE_SIZE + OFFSET.as_vec2() * TILE_SIZE;
+            let to = rooms.rooms[to_idx].as_rect().center() * TILE_SIZE;
             let mut color = match *weight {
                 EdgeWeight::Adjacent => Color::GREEN.with_a(0.5),
                 EdgeWeight::Weighted(..) => Color::BLUE.with_a(0.5),
