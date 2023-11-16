@@ -4,7 +4,7 @@ use petgraph::{algo::min_spanning_tree, data::FromElements, prelude::UnGraphMap}
 
 use crate::rand::*;
 
-const TILE_SIZE: f32 = 16.0;
+pub const TILE_SIZE: f32 = 16.0;
 const TILE_Z: f32 = 1.0;
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
@@ -20,8 +20,12 @@ pub struct Rooms {
     mst: UnGraphMap<usize, EdgeWeight>,
 }
 impl Rooms {
-    fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.rooms.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.rooms.is_empty()
     }
 
     fn push(&mut self, new_room: IRect) {
@@ -29,7 +33,7 @@ impl Rooms {
         self.graph.add_node(self.rooms.len() - 1);
     }
 
-    fn iter(&self) -> impl Iterator<Item = &IRect> {
+    pub fn iter(&self) -> impl Iterator<Item = &IRect> {
         self.rooms.iter()
     }
 

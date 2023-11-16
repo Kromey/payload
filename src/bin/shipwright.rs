@@ -4,7 +4,7 @@ use bevy::{
     prelude::*,
 };
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
-use payload::camera::MainCamera;
+use payload::{camera::MainCamera, map::Rooms};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, States)]
 enum ShipState {
@@ -25,20 +25,23 @@ fn shipwright_ui(
     mut contexts: EguiContexts,
     mut exit: EventWriter<AppExit>,
 ) {
-    egui::SidePanel::left("shipwright_panel").show(contexts.ctx_mut(), |ui| {
-        ui.heading("Shipwright");
-        ui.separator();
-        if ui.button("New Ship").clicked() {
-            next_state.set(ShipState::Creating);
-        }
-
-        ui.with_layout(egui::Layout::bottom_up(egui::Align::TOP), |ui| {
-            if ui.button("Exit").clicked() {
-                exit.send(AppExit);
-            }
+    egui::SidePanel::left("shipwright_panel")
+        .exact_width(200.0)
+        .resizable(false)
+        .show(contexts.ctx_mut(), |ui| {
+            ui.heading("Shipwright");
             ui.separator();
+            if ui.button("New Ship").clicked() {
+                next_state.set(ShipState::Creating);
+            }
+
+            ui.with_layout(egui::Layout::bottom_up(egui::Align::TOP), |ui| {
+                if ui.button("Exit").clicked() {
+                    exit.send(AppExit);
+                }
+                ui.separator();
+            });
         });
-    });
 }
 
 fn shipwright_input(
@@ -81,6 +84,17 @@ fn cleanup_sprites(mut commands: Commands, sprites_qry: Query<Entity, With<Sprit
     }
 }
 
+fn center_camera(mut camera_qry: Query<&mut Transform, With<MainCamera>>, rooms: Res<Rooms>) {
+    // Find the x center of the ship
+    let x_min = rooms.iter().map(|room| room.min.x).min().unwrap();
+    let x_max = rooms.iter().map(|room| room.max.x).max().unwrap();
+    let x_center = (x_min + x_max) as f32 / 2.0 * payload::map::TILE_SIZE;
+
+    for mut camera in camera_qry.iter_mut() {
+        camera.translation.x = x_center - 150.0; // Account for the sidebar's width; why isn't this the same??
+    }
+}
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
@@ -105,5 +119,6 @@ fn main() {
             ),
         )
         .add_systems(OnEnter(ShipState::Creating), cleanup_sprites)
+        .add_systems(OnEnter(ShipState::Displaying), center_camera)
         .run();
 }
