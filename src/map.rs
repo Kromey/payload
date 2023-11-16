@@ -8,11 +8,17 @@ const TILE_SIZE: f32 = 16.0;
 const TILE_Z: f32 = 1.0;
 const OFFSET: IVec2 = IVec2::new(-32, 0);
 
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+enum EdgeWeight {
+    Adjacent,
+    Weighted(f32, f32),
+}
+
 #[derive(Debug, Default, Clone, Resource)]
 pub struct Rooms {
     rooms: Vec<IRect>,
-    graph: UnGraphMap<usize, f32>,
-    mst: UnGraphMap<usize, f32>,
+    graph: UnGraphMap<usize, EdgeWeight>,
+    mst: UnGraphMap<usize, EdgeWeight>,
 }
 impl Rooms {
     fn len(&self) -> usize {
@@ -28,7 +34,7 @@ impl Rooms {
         self.rooms.iter()
     }
 
-    fn add_edge(&mut self, p: usize, q: usize, weight: f32) {
+    fn add_edge(&mut self, p: usize, q: usize, weight: EdgeWeight) {
         self.graph.add_edge(p, q, weight);
     }
 }
@@ -114,14 +120,13 @@ pub fn setup_map(mut commands: Commands, mut _world_rng: ResMut<WorldRng>) {
             let y = (rooms.rooms[p].center().as_vec2().y.abs()
                 + rooms.rooms[q].center().as_vec2().y.abs())
                 / 2.0;
-            // Additionally add a small factor based on distance, to favor shorter paths
+            // Additionally favor shorter paths
             let d = rooms.rooms[p]
                 .center()
                 .as_vec2()
                 .distance(rooms.rooms[q].center().as_vec2());
 
-            // A base weight of 1 ensures we always weight these over adjacent links
-            rooms.add_edge(p, q, 1.0 + y + d / 10.0);
+            rooms.add_edge(p, q, EdgeWeight::Weighted(y, d));
         }
     }
 
@@ -137,8 +142,8 @@ pub fn setup_map(mut commands: Commands, mut _world_rng: ResMut<WorldRng>) {
             let area = size.x * size.y;
             // If we touch only on a corner, the intersection has area 1 - but we don't care about that
             if area > 1 {
-                // Set the weight for this edge low to signify adjacency
-                rooms.add_edge(idx, other_idx, 0.1);
+                // Set the weight for this edge to signify adjacency
+                rooms.add_edge(idx, other_idx, EdgeWeight::Adjacent);
             }
         }
     }
@@ -178,10 +183,9 @@ pub fn debug_triangulation(mut gizmos: Gizmos, rooms: Res<Rooms>) {
             }
             let to =
                 rooms.rooms[to_idx].as_rect().center() * TILE_SIZE + OFFSET.as_vec2() * TILE_SIZE;
-            let mut color = if *weight <= 0.1 {
-                Color::GREEN.with_a(0.5)
-            } else {
-                Color::BLUE.with_a(0.5)
+            let mut color = match *weight {
+                EdgeWeight::Adjacent => Color::GREEN.with_a(0.5),
+                EdgeWeight::Weighted(..) => Color::BLUE.with_a(0.5),
             };
             if rooms.mst.contains_edge(idx, to_idx) {
                 color = Color::GOLD;
