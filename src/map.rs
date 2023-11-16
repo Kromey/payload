@@ -7,6 +7,33 @@ use crate::rand::*;
 pub const TILE_SIZE: f32 = 16.0;
 const TILE_Z: f32 = 1.0;
 
+#[derive(Debug, Clone, Copy, Resource)]
+pub struct ShipParameters {
+    pub ship_length: i32,
+    pub max_width: i32,
+    pub min_rooms: i32,
+    pub max_rooms: i32,
+    pub room_width_min: i32,
+    pub room_width_max: i32,
+    pub room_height_min: i32,
+    pub room_height_max: i32,
+}
+
+impl Default for ShipParameters {
+    fn default() -> Self {
+        Self {
+            ship_length: 64,
+            max_width: 24,
+            min_rooms: 10,
+            max_rooms: 25,
+            room_width_min: 4,
+            room_width_max: 16,
+            room_height_min: 4,
+            room_height_max: 16,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 enum EdgeWeight {
     Adjacent,
@@ -42,22 +69,22 @@ impl Rooms {
     }
 }
 
-pub fn setup_map(mut commands: Commands, mut _world_rng: ResMut<WorldRng>) {
+pub fn setup_map(
+    mut commands: Commands,
+    ship: Res<ShipParameters>,
+    mut _world_rng: ResMut<WorldRng>,
+) {
     let mut rooms = Rooms::default();
-
-    let ship_length = 64;
-    let max_center = 24;
-    let room_size = 4..16;
 
     let mut rng = WyRand::from_entropy();
 
-    for _ in 0..25 {
-        let x = rng.gen_range(0..ship_length);
+    for _ in 0..ship.max_rooms {
+        let x = rng.gen_range(0..ship.ship_length);
         let mut size = IVec2::new(
-            rng.gen_range(room_size.clone()),
-            rng.gen_range(room_size.clone()),
+            rng.gen_range(ship.room_width_min..ship.room_width_max),
+            rng.gen_range(ship.room_height_min..ship.room_height_max),
         );
-        let mut center = IVec2::new(x, max_center + size.y);
+        let mut center = IVec2::new(x, ship.max_width + size.y);
 
         loop {
             center.y -= 1;
@@ -83,7 +110,7 @@ pub fn setup_map(mut commands: Commands, mut _world_rng: ResMut<WorldRng>) {
             }
         }
 
-        if center.y > max_center {
+        if center.y > ship.max_width {
             // This room doesn't fit here, drop it
             continue;
         }
@@ -95,6 +122,11 @@ pub fn setup_map(mut commands: Commands, mut _world_rng: ResMut<WorldRng>) {
             let new_room = IRect::from_center_size(center, size);
             rooms.push(new_room);
         }
+    }
+
+    // Make sure we got enough rooms
+    if rooms.len() < ship.min_rooms as usize {
+        return setup_map(commands, ship, _world_rng);
     }
 
     // Calculate Delauney triangulation of the rooms

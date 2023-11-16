@@ -2,6 +2,7 @@ use core::GameState;
 
 use bevy::{prelude::*, transform::TransformSystem};
 use bevy_rapier2d::prelude::*;
+use map::ShipParameters;
 
 pub mod ai;
 pub mod camera;
@@ -31,7 +32,8 @@ pub fn run_game() {
         // TODO: Allow world seed to be configurable
         .insert_resource(rand::world_seed("Test seed"));
 
-    app.add_systems(Update, bevy::window::close_on_esc)
+    app.init_resource::<ShipParameters>()
+        .add_systems(Update, bevy::window::close_on_esc)
         .add_state::<core::GameState>()
         .add_systems(Startup, (camera::spawn_camera, sprites::load_sprites))
         .add_systems(

@@ -1,10 +1,12 @@
 use bevy::{
-    app::AppExit,
     input::mouse::{MouseMotion, MouseWheel},
     prelude::*,
 };
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
-use payload::{camera::MainCamera, map::Rooms};
+use payload::{
+    camera::MainCamera,
+    map::{Rooms, ShipParameters},
+};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, States)]
 enum ShipState {
@@ -23,23 +25,37 @@ fn advance_state(state: Res<State<ShipState>>, mut next_state: ResMut<NextState<
 fn shipwright_ui(
     mut next_state: ResMut<NextState<ShipState>>,
     mut contexts: EguiContexts,
-    mut exit: EventWriter<AppExit>,
+    mut ship: ResMut<ShipParameters>,
 ) {
     egui::SidePanel::left("shipwright_panel")
         .exact_width(200.0)
         .resizable(false)
         .show(contexts.ctx_mut(), |ui| {
-            ui.heading("Shipwright");
-            ui.separator();
-            if ui.button("New Ship").clicked() {
-                next_state.set(ShipState::Creating);
-            }
+            ui.heading("Ship Parameters");
 
-            ui.with_layout(egui::Layout::bottom_up(egui::Align::TOP), |ui| {
-                if ui.button("Exit").clicked() {
-                    exit.send(AppExit);
+            ui.separator();
+            ui.heading("Ship Size");
+            ui.add(egui::Slider::new(&mut ship.ship_length, 16..=256).text("Length"));
+            ui.add(egui::Slider::new(&mut ship.max_width, 16..=64).text("Max Width"));
+            ui.add(egui::Slider::new(&mut ship.min_rooms, 0..=64).text("Min Rooms"));
+            ui.add(egui::Slider::new(&mut ship.max_rooms, 8..=64).text("Max Rooms"));
+
+            ui.separator();
+            ui.heading("Room Size");
+            ui.add(egui::Slider::new(&mut ship.room_width_min, 4..=64).text("Min Width"));
+            ui.add(egui::Slider::new(&mut ship.room_width_max, 4..=64).text("Max Width"));
+            ui.add(egui::Slider::new(&mut ship.room_height_min, 4..=64).text("Min Height"));
+            ui.add(egui::Slider::new(&mut ship.room_height_max, 4..=64).text("Max Height"));
+
+            ui.separator();
+            ui.horizontal(|ui| {
+                if ui.button("Generate Ship").clicked() {
+                    next_state.set(ShipState::Creating);
                 }
-                ui.separator();
+
+                if ui.button("Reset Defaults").clicked() {
+                    *ship = ShipParameters::default();
+                }
             });
         });
 }
@@ -49,6 +65,7 @@ fn shipwright_input(
     mut scroll_evt: EventReader<MouseWheel>,
     mut motion_evt: EventReader<MouseMotion>,
     mouse_buttons: Res<Input<MouseButton>>,
+    mut contexts: EguiContexts,
 ) {
     // Zoom in/out with scroll wheel
     let zoom: f32 = scroll_evt
@@ -63,7 +80,7 @@ fn shipwright_input(
     let pan: Vec2 = motion_evt
         .read()
         .map(|motion| {
-            if mouse_buttons.pressed(MouseButton::Left) {
+            if mouse_buttons.pressed(MouseButton::Left) && !contexts.ctx_mut().is_using_pointer() {
                 Vec2::new(-motion.delta.x, motion.delta.y)
             } else {
                 Vec2::ZERO
@@ -100,6 +117,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(payload::rand::RandPlugin::default())
         .add_plugins(EguiPlugin)
+        .init_resource::<ShipParameters>()
         .add_state::<ShipState>()
         .add_systems(
             Startup,
