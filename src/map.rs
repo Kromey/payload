@@ -109,7 +109,19 @@ pub fn setup_map(mut commands: Commands, mut _world_rng: ResMut<WorldRng>) {
             let p = triangulation.triangles[e];
             let q = triangulation.triangles[delaunator::next_halfedge(e)];
 
-            rooms.add_edge(p, q, 1.0 + rng.gen::<f32>() / 20.0);
+            // Weight the links by how far from the spine they are
+            // "How far" being the average of the absolute value of their respective y endpoints
+            let y = (rooms.rooms[p].center().as_vec2().y.abs()
+                + rooms.rooms[q].center().as_vec2().y.abs())
+                / 2.0;
+            // Additionally add a small factor based on distance, to favor shorter paths
+            let d = rooms.rooms[p]
+                .center()
+                .as_vec2()
+                .distance(rooms.rooms[q].center().as_vec2());
+
+            // A base weight of 1 ensures we always weight these over adjacent links
+            rooms.add_edge(p, q, 1.0 + y + d / 10.0);
         }
     }
 
@@ -125,8 +137,8 @@ pub fn setup_map(mut commands: Commands, mut _world_rng: ResMut<WorldRng>) {
             let area = size.x * size.y;
             // If we touch only on a corner, the intersection has area 1 - but we don't care about that
             if area > 1 {
-                // Set the weight for this edge to 0 to signify adjacency
-                rooms.add_edge(idx, other_idx, rng.gen::<f32>() / 20.0);
+                // Set the weight for this edge low to signify adjacency
+                rooms.add_edge(idx, other_idx, 0.1);
             }
         }
     }
@@ -166,7 +178,7 @@ pub fn debug_triangulation(mut gizmos: Gizmos, rooms: Res<Rooms>) {
             }
             let to =
                 rooms.rooms[to_idx].as_rect().center() * TILE_SIZE + OFFSET.as_vec2() * TILE_SIZE;
-            let mut color = if *weight == 0.0 {
+            let mut color = if *weight <= 0.1 {
                 Color::GREEN.with_a(0.5)
             } else {
                 Color::BLUE.with_a(0.5)

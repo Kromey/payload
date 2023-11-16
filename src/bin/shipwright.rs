@@ -51,7 +51,7 @@ fn shipwright_input(
     let zoom: f32 = scroll_evt
         .read()
         .map(|wheel| match wheel.unit {
-            bevy::input::mouse::MouseScrollUnit::Line => wheel.y * 10.0,
+            bevy::input::mouse::MouseScrollUnit::Line => wheel.y * 10.0, // totally arbitrary, I dunno!
             bevy::input::mouse::MouseScrollUnit::Pixel => wheel.y,
         })
         .sum();
