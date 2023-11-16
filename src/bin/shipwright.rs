@@ -53,7 +53,13 @@ fn shipwright_ui(
                     next_state.set(ShipState::Creating);
                 }
 
-                if ui.button("Reset Defaults").clicked() {
+                if ui
+                    .add_enabled(
+                        *ship != ShipParameters::default(),
+                        egui::Button::new("Reset Defaults"),
+                    )
+                    .clicked()
+                {
                     *ship = ShipParameters::default();
                 }
             });

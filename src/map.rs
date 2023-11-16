@@ -7,7 +7,7 @@ use crate::rand::*;
 pub const TILE_SIZE: f32 = 16.0;
 const TILE_Z: f32 = 1.0;
 
-#[derive(Debug, Clone, Copy, Resource)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Resource)]
 pub struct ShipParameters {
     pub ship_length: i32,
     pub max_width: i32,
