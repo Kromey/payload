@@ -25,6 +25,12 @@ struct ShipStatistics {
     room_count: usize,
 }
 
+#[derive(Debug, Default, Clone, Copy, Resource)]
+struct ShipSeed {
+    use_seed: bool,
+    value: u64,
+}
+
 fn advance_state(state: Res<State<ShipState>>, mut next_state: ResMut<NextState<ShipState>>) {
     match *state.get() {
         ShipState::Creating => next_state.set(ShipState::Displaying),
@@ -37,12 +43,25 @@ fn shipwright_ui(
     mut contexts: EguiContexts,
     mut ship: ResMut<ShipParameters>,
     statistics: Res<ShipStatistics>,
+    mut seed: ResMut<ShipSeed>,
 ) {
     egui::SidePanel::left("shipwright_panel")
         .exact_width(200.0)
         .resizable(false)
         .show(contexts.ctx_mut(), |ui| {
             ui.heading("Ship Parameters");
+
+            ui.checkbox(&mut seed.use_seed, "Use Seed");
+            let mut seed_str = seed.value.to_string();
+            ui.text_edit_singleline(&mut seed_str);
+            if let Ok(val) = seed_str.parse::<u64>() {
+                seed.value = val;
+            }
+            if seed.use_seed {
+                ship.seed = Some(seed.value);
+            } else {
+                ship.seed = None;
+            }
 
             ui.separator();
             ui.heading("Ship Size");
@@ -72,6 +91,7 @@ fn shipwright_ui(
                     .clicked()
                 {
                     *ship = ShipParameters::default();
+                    seed.use_seed = false;
                 }
             });
         });
@@ -88,6 +108,23 @@ fn shipwright_ui(
             ui.label(format!("Rooms: {}", statistics.room_count));
 
             ui.heading("Parameters");
+            let seed_str = statistics.parameters.seed.unwrap().to_string();
+            if seed_str.len() > 10 {
+                let short_seed = &seed_str[..10];
+                if ui
+                    .add(
+                        egui::Label::new(format!("Seed: {short_seed}..."))
+                            .sense(egui::Sense::click()),
+                    )
+                    .on_hover_text(seed_str)
+                    .clicked()
+                {
+                    seed.use_seed = true;
+                    seed.value = statistics.parameters.seed.unwrap();
+                };
+            } else {
+                ui.label(format!("Seed: {seed_str}"));
+            }
             ui.label(format!("Length: {}", statistics.parameters.ship_length));
             ui.label(format!("Width: {}", statistics.parameters.max_width));
             ui.label(format!(
@@ -157,7 +194,16 @@ fn center_camera(mut camera_qry: Query<&mut Transform, With<MainCamera>>, rooms:
     }
 }
 
-fn gather_ship_stats(mut commands: Commands, parameters: Res<ShipParameters>, rooms: Res<Rooms>) {
+fn gather_ship_stats(
+    mut commands: Commands,
+    parameters: Res<ShipParameters>,
+    rooms: Res<Rooms>,
+    mut seed: ResMut<ShipSeed>,
+) {
+    if let Some(ship_seed) = parameters.seed {
+        seed.value = ship_seed;
+    }
+
     let (min_x, min_y, max_x, max_y) = rooms
         .iter()
         .map(|room| (room.min.x, room.min.y, room.max.x, room.max.y))
@@ -189,6 +235,7 @@ fn main() {
         .add_plugins(payload::rand::RandPlugin::default())
         .add_plugins(EguiPlugin)
         .init_resource::<ShipParameters>()
+        .init_resource::<ShipSeed>()
         .add_state::<ShipState>()
         .add_systems(
             Startup,
