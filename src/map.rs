@@ -74,6 +74,10 @@ impl Rooms {
 pub fn setup_map(mut commands: Commands, mut ship: ResMut<ShipParameters>) {
     let mut rooms = Rooms::default();
 
+    // Enforce the rule that min_rooms *must* be less than max_rooms
+    // NB: We assume the max_rooms parameter was set accurately and make no attempt to adjust it
+    ship.min_rooms = std::cmp::min(ship.min_rooms, ship.max_rooms);
+
     if ship.seed.is_none() {
         ship.seed = Some(WyRand::from_entropy().gen());
     }
@@ -130,11 +134,14 @@ pub fn setup_map(mut commands: Commands, mut ship: ResMut<ShipParameters>) {
         }
     }
 
-    // Make sure we got enough rooms
-    if rooms.len() < ship.min_rooms as usize {
+    // Make sure we got enough rooms - but not too many!
+    if rooms.len() < ship.min_rooms as usize || rooms.len() > ship.max_rooms as usize {
         warn!(
-            "Ship generation failed with seed {}, trying again",
-            ship.seed.unwrap()
+            "Ship generation failed with seed {}, trying again ({} ≤ {} ≤ {})",
+            ship.seed.unwrap(),
+            ship.min_rooms,
+            rooms.len(),
+            ship.max_rooms,
         );
         // Pick a new seed; use our generator so our seed, even though "broken", is still deterministic
         ship.seed = Some(rng.gen());
