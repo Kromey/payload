@@ -1,3 +1,5 @@
+use std::cmp::{max, min};
+
 use bevy::{
     input::mouse::{MouseMotion, MouseWheel},
     prelude::*,
@@ -15,6 +17,14 @@ enum ShipState {
     Displaying,
 }
 
+#[derive(Debug, Clone, Copy, Resource)]
+struct ShipStatistics {
+    parameters: ShipParameters,
+    ship_length: i32,
+    ship_width: i32,
+    room_count: usize,
+}
+
 fn advance_state(state: Res<State<ShipState>>, mut next_state: ResMut<NextState<ShipState>>) {
     match *state.get() {
         ShipState::Creating => next_state.set(ShipState::Displaying),
@@ -26,6 +36,7 @@ fn shipwright_ui(
     mut next_state: ResMut<NextState<ShipState>>,
     mut contexts: EguiContexts,
     mut ship: ResMut<ShipParameters>,
+    statistics: Res<ShipStatistics>,
 ) {
     egui::SidePanel::left("shipwright_panel")
         .exact_width(200.0)
@@ -63,6 +74,34 @@ fn shipwright_ui(
                     *ship = ShipParameters::default();
                 }
             });
+        });
+
+    egui::Window::new("Ship Statistics")
+        .anchor(egui::Align2::RIGHT_TOP, egui::Vec2::ZERO)
+        .collapsible(false)
+        .resizable(false)
+        .title_bar(false)
+        .show(contexts.ctx_mut(), |ui| {
+            ui.heading("Ship Statistics");
+            ui.label(format!("Length: {}", statistics.ship_length));
+            ui.label(format!("Width: {}", statistics.ship_width));
+            ui.label(format!("Rooms: {}", statistics.room_count));
+
+            ui.heading("Parameters");
+            ui.label(format!("Length: {}", statistics.parameters.ship_length));
+            ui.label(format!("Width: {}", statistics.parameters.max_width));
+            ui.label(format!(
+                "Rooms: {} - {}",
+                statistics.parameters.min_rooms, statistics.parameters.max_rooms
+            ));
+            ui.label(format!(
+                "Room Width: {} - {}",
+                statistics.parameters.room_width_min, statistics.parameters.room_width_max
+            ));
+            ui.label(format!(
+                "Room Height: {} - {}",
+                statistics.parameters.room_height_min, statistics.parameters.room_height_max
+            ));
         });
 }
 
@@ -118,6 +157,32 @@ fn center_camera(mut camera_qry: Query<&mut Transform, With<MainCamera>>, rooms:
     }
 }
 
+fn gather_ship_stats(mut commands: Commands, parameters: Res<ShipParameters>, rooms: Res<Rooms>) {
+    let (min_x, min_y, max_x, max_y) = rooms
+        .iter()
+        .map(|room| (room.min.x, room.min.y, room.max.x, room.max.y))
+        .reduce(|acc, room| {
+            (
+                min(acc.0, room.0),
+                min(acc.1, room.1),
+                max(acc.2, room.2),
+                max(acc.3, room.3),
+            )
+        })
+        .unwrap();
+    let ship_length = max_x - min_x;
+    let ship_width = max_y - min_y;
+
+    let stats = ShipStatistics {
+        parameters: *parameters,
+        ship_length,
+        ship_width,
+        room_count: rooms.len(),
+    };
+
+    commands.insert_resource(stats);
+}
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
@@ -137,12 +202,15 @@ fn main() {
             (
                 payload::map::debug_triangulation.run_if(in_state(ShipState::Displaying)),
                 advance_state,
-                shipwright_ui,
+                shipwright_ui.run_if(in_state(ShipState::Displaying)),
                 shipwright_input,
                 payload::map::setup_map.run_if(in_state(ShipState::Creating)),
             ),
         )
         .add_systems(OnEnter(ShipState::Creating), cleanup_sprites)
-        .add_systems(OnEnter(ShipState::Displaying), center_camera)
+        .add_systems(
+            OnEnter(ShipState::Displaying),
+            (center_camera, gather_ship_stats),
+        )
         .run();
 }
