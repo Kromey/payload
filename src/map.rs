@@ -9,6 +9,7 @@ const TILE_Z: f32 = 1.0;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Resource)]
 pub struct ShipParameters {
+    pub seed: Option<u64>,
     pub ship_length: i32,
     pub max_width: i32,
     pub min_rooms: i32,
@@ -22,6 +23,7 @@ pub struct ShipParameters {
 impl Default for ShipParameters {
     fn default() -> Self {
         Self {
+            seed: None,
             ship_length: 64,
             max_width: 24,
             min_rooms: 10,
@@ -69,14 +71,13 @@ impl Rooms {
     }
 }
 
-pub fn setup_map(
-    mut commands: Commands,
-    ship: Res<ShipParameters>,
-    mut _world_rng: ResMut<WorldRng>,
-) {
+pub fn setup_map(mut commands: Commands, mut ship: ResMut<ShipParameters>) {
     let mut rooms = Rooms::default();
 
-    let mut rng = WyRand::from_entropy();
+    if ship.seed.is_none() {
+        ship.seed = Some(WyRand::from_entropy().gen());
+    }
+    let mut rng = WyRand::seed_from_u64(ship.seed.unwrap());
 
     for _ in 0..ship.max_rooms {
         let x = rng.gen_range(0..ship.ship_length);
@@ -126,7 +127,7 @@ pub fn setup_map(
 
     // Make sure we got enough rooms
     if rooms.len() < ship.min_rooms as usize {
-        return setup_map(commands, ship, _world_rng);
+        return setup_map(commands, ship);
     }
 
     // Calculate Delauney triangulation of the rooms
