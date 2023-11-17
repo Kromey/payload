@@ -65,9 +65,10 @@ fn shipwright_ui(
 
             ui.separator();
             ui.heading("Ship Size");
+            let max_rooms = ship.max_rooms;
             ui.add(egui::Slider::new(&mut ship.ship_length, 16..=256).text("Length"));
             ui.add(egui::Slider::new(&mut ship.max_width, 16..=64).text("Max Width"));
-            ui.add(egui::Slider::new(&mut ship.min_rooms, 0..=64).text("Min Rooms"));
+            ui.add(egui::Slider::new(&mut ship.min_rooms, 0..=max_rooms).text("Min Rooms"));
             ui.add(egui::Slider::new(&mut ship.max_rooms, 8..=64).text("Max Rooms"));
 
             ui.separator();
