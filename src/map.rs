@@ -127,6 +127,12 @@ pub fn setup_map(mut commands: Commands, mut ship: ResMut<ShipParameters>) {
 
     // Make sure we got enough rooms
     if rooms.len() < ship.min_rooms as usize {
+        warn!(
+            "Ship generation failed with seed {}, trying again",
+            ship.seed.unwrap()
+        );
+        // Pick a new seed; use our generator so our seed, even though "broken", is still deterministic
+        ship.seed = Some(rng.gen());
         return setup_map(commands, ship);
     }
 

@@ -200,8 +200,10 @@ fn gather_ship_stats(
     rooms: Res<Rooms>,
     mut seed: ResMut<ShipSeed>,
 ) {
-    if let Some(ship_seed) = parameters.seed {
-        seed.value = ship_seed;
+    if !seed.use_seed {
+        if let Some(ship_seed) = parameters.seed {
+            seed.value = ship_seed;
+        }
     }
 
     let (min_x, min_y, max_x, max_y) = rooms
