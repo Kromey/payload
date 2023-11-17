@@ -79,7 +79,9 @@ pub fn setup_map(mut commands: Commands, mut ship: ResMut<ShipParameters>) {
     }
     let mut rng = WyRand::seed_from_u64(ship.seed.unwrap());
 
-    for _ in 0..ship.max_rooms {
+    let mut rooms_generated = 0;
+
+    while rooms_generated < ship.max_rooms {
         let x = rng.gen_range(0..ship.ship_length);
         let mut size = IVec2::new(
             rng.gen_range(ship.room_width_min..ship.room_width_max),
@@ -111,13 +113,16 @@ pub fn setup_map(mut commands: Commands, mut ship: ResMut<ShipParameters>) {
             }
         }
 
+        // Add rooms we've generated, including for symmetry
+        // Do this BEFORE we check if this room even fits!
+        rooms_generated += if center.y > 0 { 2 } else { 1 };
+
         if center.y > ship.max_width {
             // This room doesn't fit here, drop it
             continue;
         }
         let new_room = IRect::from_center_size(center, size);
-        rooms.rooms.push(new_room);
-        rooms.graph.add_node(rooms.len() - 1);
+        rooms.push(new_room);
         if center.y > 0 {
             let center = IVec2::new(center.x, -center.y);
             let new_room = IRect::from_center_size(center, size);
