@@ -27,6 +27,7 @@ pub fn setup_fps_counter(mut commands: Commands) {
                     padding: UiRect::all(Val::Px(4.0)),
                     ..Default::default()
                 },
+                visibility: Visibility::Hidden,
                 ..Default::default()
             },
         ))
@@ -70,6 +71,20 @@ pub fn update_fps(
             text.sections[1].value = format!("{value:>4.0}");
         } else {
             text.sections[1].value = " N/A".into();
+        }
+    }
+}
+
+pub fn toggle_fps_counter(
+    mut counter_qry: Query<&mut Visibility, With<FpsCounter>>,
+    keyboard: Res<Input<KeyCode>>,
+) {
+    if keyboard.just_pressed(KeyCode::F12) {
+        for mut vis in counter_qry.iter_mut() {
+            *vis = match *vis {
+                Visibility::Hidden => Visibility::Visible,
+                _ => Visibility::Hidden,
+            }
         }
     }
 }

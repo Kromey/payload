@@ -61,6 +61,7 @@ pub fn run_game() {
                 )
                     .run_if(in_state(GameState::InGame)),
                 ui::update_fps,
+                ui::toggle_fps_counter,
             ),
         )
         // Update camera position in PostUpdate, but before Bevy propagates Transform to GlobalTransform
