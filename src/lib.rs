@@ -13,10 +13,12 @@ pub mod player;
 pub mod rand;
 pub mod setup;
 pub mod sprites;
+pub mod ui;
 
 pub fn run_game() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins)
+        .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
         .add_plugins(RapierPhysicsPlugin::<()>::pixels_per_meter(32.0))
         .insert_resource(RapierConfiguration {
             gravity: Vec2::ZERO, // In a top-down view, Rapier doesn't "see" gravity
@@ -35,7 +37,14 @@ pub fn run_game() {
     app.init_resource::<ShipParameters>()
         .add_systems(Update, bevy::window::close_on_esc)
         .add_state::<core::GameState>()
-        .add_systems(Startup, (camera::spawn_camera, sprites::load_sprites))
+        .add_systems(
+            Startup,
+            (
+                camera::spawn_camera,
+                sprites::load_sprites,
+                ui::setup_fps_counter,
+            ),
+        )
         .add_systems(
             Update,
             (
@@ -51,6 +60,7 @@ pub fn run_game() {
                     // map::debug_triangulation,
                 )
                     .run_if(in_state(GameState::InGame)),
+                ui::update_fps,
             ),
         )
         // Update camera position in PostUpdate, but before Bevy propagates Transform to GlobalTransform

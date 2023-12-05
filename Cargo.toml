@@ -28,6 +28,7 @@ features = [
   "wayland",            # Linux: Support Wayland windowing system
   "bevy_gizmos",        # Immediate-mode drawing
   "bevy_ui",            # User interface
+  "default_font",       # Include a default font (for UI)
 
   # Rendering
   "bevy_render",        # Rendering framework core
