@@ -79,7 +79,6 @@ pub fn run_game() {
             OnEnter(GameState::InGame),
             (
                 // map::setup_map,
-                setup::test_rng,
                 player::spawn_player,
                 fov::setup_fog_of_war,
                 setup::setup_test_entities,

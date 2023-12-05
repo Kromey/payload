@@ -83,7 +83,6 @@ pub fn update_fps(
                 .and_then(|fps| fps.smoothed())
             {
                 text.sections[1].value = format!("{value:>4.0}");
-                info!("FPS: {value:>4.0}");
             } else {
                 text.sections[1].value = " N/A".into();
             }
