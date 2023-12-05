@@ -11,6 +11,15 @@ pub struct FpsCounter;
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Component)]
 pub struct FpsText;
 
+#[derive(Debug, Deref, DerefMut)]
+pub struct FpsUpdateTimer(Timer);
+
+impl Default for FpsUpdateTimer {
+    fn default() -> Self {
+        Self(Timer::from_seconds(0.50, TimerMode::Repeating))
+    }
+}
+
 pub fn setup_fps_counter(mut commands: Commands) {
     commands
         .spawn((
@@ -62,15 +71,22 @@ pub fn setup_fps_counter(mut commands: Commands) {
 pub fn update_fps(
     diagnostics: Res<DiagnosticsStore>,
     mut text_qry: Query<&mut Text, With<FpsText>>,
+    mut timer: Local<FpsUpdateTimer>,
+    time: Res<Time>,
 ) {
-    for mut text in text_qry.iter_mut() {
-        if let Some(value) = diagnostics
-            .get(FrameTimeDiagnosticsPlugin::FPS)
-            .and_then(|fps| fps.smoothed())
-        {
-            text.sections[1].value = format!("{value:>4.0}");
-        } else {
-            text.sections[1].value = " N/A".into();
+    timer.tick(time.delta());
+
+    if timer.just_finished() {
+        for mut text in text_qry.iter_mut() {
+            if let Some(value) = diagnostics
+                .get(FrameTimeDiagnosticsPlugin::FPS)
+                .and_then(|fps| fps.smoothed())
+            {
+                text.sections[1].value = format!("{value:>4.0}");
+                info!("FPS: {value:>4.0}");
+            } else {
+                text.sections[1].value = " N/A".into();
+            }
         }
     }
 }
