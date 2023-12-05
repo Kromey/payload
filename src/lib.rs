@@ -17,13 +17,19 @@ pub mod ui;
 
 pub fn run_game() {
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins)
-        .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
-        .add_plugins(RapierPhysicsPlugin::<()>::pixels_per_meter(32.0))
-        .insert_resource(RapierConfiguration {
-            gravity: Vec2::ZERO, // In a top-down view, Rapier doesn't "see" gravity
+    app.add_plugins(DefaultPlugins.set(WindowPlugin {
+        primary_window: Some(Window {
+            present_mode: bevy::window::PresentMode::AutoNoVsync,
             ..Default::default()
-        });
+        }),
+        ..Default::default()
+    }))
+    .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
+    .add_plugins(RapierPhysicsPlugin::<()>::pixels_per_meter(32.0))
+    .insert_resource(RapierConfiguration {
+        gravity: Vec2::ZERO, // In a top-down view, Rapier doesn't "see" gravity
+        ..Default::default()
+    });
 
     // Only enable Rapier debug rendering in debug builds
     #[cfg(debug_assertions)]
